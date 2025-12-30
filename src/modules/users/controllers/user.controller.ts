@@ -8,13 +8,14 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
 import { UpdateUserDto } from '../dtos/request/update-user.dto';
 import { ResponseFormat } from '../../common/response-format';
 import { PageDto } from '../../common/dtos/page.dto';
 import { UserDto } from '../dtos/response/user.dto';
+import { PaginationDto } from '../../common/dtos/pagination.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -22,26 +23,31 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Find users' })
-  @ApiResponse({ type: PageDto })
+  @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search.' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for user first name' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page', example: 10 })
+  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Pagination offset', example: 0 })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: PageDto })
   async find(
-    @Query('search') search: string,
-    @Query('limit') limit: number = 10,
-    @Query('offset') offset: number = 0,
+    @Query() query: PaginationDto,
   ): Promise<ResponseFormat<PageDto<UserDto>>> {
-    return this.userService.findUsers({ search, limit, offset });
+    return this.userService.findUsers(query);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ type: UserDto })
+  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier.' })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(@Param('id') id: number): Promise<ResponseFormat<UserDto>> {
     return this.userService.getUser(id);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create user' })
-  @ApiResponse({ type: UserDto })
+  @ApiOperation({ summary: 'Create user', description: 'Register a new user.' })
+  @ApiBody({ type: CreateUserDto, description: 'User creation details' })
+  @ApiResponse({ status: 201, description: 'User created successfully', type: UserDto })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
   async createUser(
     @Body() body: CreateUserDto,
   ): Promise<ResponseFormat<UserDto>> {
@@ -49,8 +55,11 @@ export class UserController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update user' })
-  @ApiResponse({ type: UserDto })
+  @ApiOperation({ summary: 'Update user', description: 'Update an existing user profile.' })
+  @ApiBody({ type: UpdateUserDto, description: 'User update details' })
+  @ApiResponse({ status: 200, description: 'User updated successfully', type: UserDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
   async updateUser(
     @Param('id') id: number,
     @Body() body: UpdateUserDto,
@@ -59,9 +68,10 @@ export class UserController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete user' })
+  @ApiOperation({ summary: 'Delete user', description: 'Delete a user account.' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async delete(@Param('id') id: number): Promise<ResponseFormat<void>> {
     return this.userService.deleteUser(id);
   }
 }
-
