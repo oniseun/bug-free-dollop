@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
-  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -13,13 +12,13 @@ import { UserRole } from '../../enums/user-role.enum';
 export class CreateUserDto {
   @ApiProperty()
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @MaxLength(255)
   firstName: string;
 
   @ApiProperty()
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @MaxLength(255)
   lastName: string;
 
