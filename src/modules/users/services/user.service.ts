@@ -258,7 +258,8 @@ export class UserService {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
-        error instanceof BadRequestException
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException
       )
         throw error;
       this.logger.error(
