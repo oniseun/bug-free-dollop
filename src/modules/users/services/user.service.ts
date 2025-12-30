@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  ConflictException,
+} from '@nestjs/common';
 import { UserRepository } from '../repositories/user.repository';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
 import { UpdateUserDto } from '../dtos/request/update-user.dto';
@@ -77,6 +82,17 @@ export class UserService {
   }
 
   async createUser(dto: CreateUserDto): Promise<ResponseFormat<UserDto>> {
+    // Check for existing email
+    const existingUser = await this.userRepository.createQueryBuilder('user')
+      .where('user.email = :email', { email: dto.email })
+      .getOne();
+
+    if (existingUser) {
+      throw new ConflictException(
+        new ResponseFormat(false, 'Email already exists')
+      );
+    }
+
     const user = new User();
     user.firstName = dto.firstName;
     user.lastName = dto.lastName;
@@ -103,6 +119,18 @@ export class UserService {
       throw new NotFoundException(
         new ResponseFormat(false, 'User not found')
       );
+    }
+
+    if (dto.email !== undefined && dto.email !== user.email) {
+      const existingUser = await this.userRepository.createQueryBuilder('user')
+        .where('user.email = :email', { email: dto.email })
+        .getOne();
+
+      if (existingUser) {
+        throw new ConflictException(
+          new ResponseFormat(false, 'Email already exists')
+        );
+      }
     }
 
     if (dto.firstName !== undefined) user.firstName = dto.firstName;
