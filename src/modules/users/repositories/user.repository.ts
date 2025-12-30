@@ -18,6 +18,10 @@ export class UserRepository {
     return this.repository.findOne({ where: { id } });
   }
 
+  async findOneByEmail(email: string): Promise<User | null> {
+    return this.repository.findOne({ where: { email } });
+  }
+
   async save(user: User): Promise<User> {
     return this.repository.save(user);
   }
@@ -26,4 +30,3 @@ export class UserRepository {
     await this.repository.delete(id);
   }
 }
-

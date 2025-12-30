@@ -8,6 +8,9 @@ import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { LoggerModule } from 'nestjs-pino';
 import { CacheModule } from '@nestjs/cache-manager';
+import { AuthModule } from './modules/auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './modules/auth/guards/auth.guard';
 
 @Module({
   imports: [
@@ -22,8 +25,15 @@ import { CacheModule } from '@nestjs/cache-manager';
     CommonModule,
     UsersModule,
     ProductsModule,
+    AuthModule,
   ],
   controllers: [],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}
