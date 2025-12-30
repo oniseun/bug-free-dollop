@@ -1,0 +1,102 @@
+{
+  "users": [
+    {
+      "firstName": "John",
+      "lastName": "Admin",
+      "email": "john@eequ.org",
+      "password": "password",
+      "role": "admin"
+    },
+    {
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane@eequ.org",
+      "password": "password",
+      "role": "user"
+    },
+    {
+      "firstName": "Bob",
+      "lastName": "Johnson",
+      "email": "bob@eequ.org",
+      "password": "password",
+      "role": "user"
+    },
+    {
+      "firstName": "Alice",
+      "lastName": "Williams",
+      "email": "alice@eequ.org",
+      "password": "password",
+      "role": "user"
+    },
+    {
+      "firstName": "Mike",
+      "lastName": "Davis",
+      "email": "mike@eequ.org",
+      "password": "password",
+      "role": "user"
+    }
+  ],
+  "products": [
+    {
+      "userEmail": "jane@eequ.org",
+      "number": "PROD-001",
+      "title": "Wireless Bluetooth Headphones",
+      "description": "High-quality wireless headphones with noise cancellation and 30-hour battery life. Perfect for music lovers and professionals."
+    },
+    {
+      "userEmail": "jane@eequ.org",
+      "number": "PROD-002",
+      "title": "Mechanical Gaming Keyboard",
+      "description": "RGB backlit mechanical keyboard with Cherry MX switches. Designed for gaming enthusiasts and typists."
+    },
+    {
+      "userEmail": "bob@eequ.org",
+      "number": "PROD-003",
+      "title": "4K Webcam",
+      "description": "Professional 4K webcam with auto-focus and built-in microphone. Ideal for video conferencing and streaming."
+    },
+    {
+      "userEmail": "bob@eequ.org",
+      "number": "PROD-004",
+      "title": "Ergonomic Office Chair",
+      "description": "Adjustable ergonomic office chair with lumbar support and breathable mesh. Perfect for long work sessions."
+    },
+    {
+      "userEmail": "bob@eequ.org",
+      "number": "PROD-005",
+      "title": "Standing Desk Converter",
+      "description": "Height-adjustable standing desk converter with dual-tier design. Promotes better posture and health."
+    },
+    {
+      "userEmail": "alice@eequ.org",
+      "number": "PROD-006",
+      "title": "USB-C Docking Station",
+      "description": "Multi-port USB-C hub with HDMI, USB 3.0, Ethernet, and SD card reader. One-cable solution for all your devices."
+    },
+    {
+      "userEmail": "alice@eequ.org",
+      "number": "PROD-007",
+      "title": "Wireless Mouse",
+      "description": "Ergonomic wireless mouse with precision tracking and long battery life. Comfortable for extended use."
+    },
+    {
+      "userEmail": "mike@eequ.org",
+      "number": "PROD-008",
+      "title": "Portable SSD 1TB",
+      "description": "Fast portable solid-state drive with 1TB capacity. USB 3.2 Gen 2 for quick file transfers."
+    },
+    {
+      "userEmail": "mike@eequ.org",
+      "number": "PROD-009",
+      "title": "LED Desk Lamp",
+      "description": "Smart LED desk lamp with adjustable brightness and color temperature. USB charging port included."
+    },
+    {
+      "userEmail": "mike@eequ.org",
+      "number": "PROD-010",
+      "title": "Laptop Cooling Pad",
+      "description": "Adjustable laptop cooling pad with 5 quiet fans. Prevents overheating during intensive tasks."
+    }
+  ]
+}
+
