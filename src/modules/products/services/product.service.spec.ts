@@ -74,16 +74,20 @@ describe('ProductService', () => {
       search: '',
     };
 
+    const createMockQueryBuilder = () => {
+      const mockQueryBuilder = createMock<any>();
+      mockQueryBuilder.leftJoinAndSelect.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.where.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.take.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.skip.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.orderBy.mockReturnValue(mockQueryBuilder);
+      return mockQueryBuilder;
+    };
+
     it('should return paginated products list', async () => {
-      const mockQueryBuilder = {
-        leftJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        getManyAndCount: jest.fn().mockResolvedValue([[mockProduct], 1]),
-      };
-      productRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+      const mockQueryBuilder = createMockQueryBuilder();
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[mockProduct], 1]);
+      productRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       const result = await productService.findProducts(paginationDto);
 
@@ -98,15 +102,9 @@ describe('ProductService', () => {
 
     it('should apply search filter when provided', async () => {
       const searchDto = { ...paginationDto, search: 'Test' };
-      const mockQueryBuilder = {
-        leftJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        getManyAndCount: jest.fn().mockResolvedValue([[mockProduct], 1]),
-      };
-      productRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+      const mockQueryBuilder = createMockQueryBuilder();
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[mockProduct], 1]);
+      productRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       await productService.findProducts(searchDto);
 

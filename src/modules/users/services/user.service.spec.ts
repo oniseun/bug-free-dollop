@@ -11,7 +11,6 @@ import { UpdateUserDto } from '../dtos/request/update-user.dto';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { CurrentUser } from '../../auth/interfaces/jwt-payload.interface';
 
-// Mock bcrypt
 jest.mock('bcrypt');
 
 describe('UserService', () => {
@@ -42,18 +41,16 @@ describe('UserService', () => {
   };
 
   beforeEach(() => {
-    const mockQueryBuilder = {
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      getOne: jest.fn(),
-      take: jest.fn().mockReturnThis(),
-      skip: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
-    };
+    const mockQueryBuilder = createMock<any>();
+    mockQueryBuilder.where.mockReturnValue(mockQueryBuilder);
+    mockQueryBuilder.andWhere.mockReturnValue(mockQueryBuilder);
+    mockQueryBuilder.take.mockReturnValue(mockQueryBuilder);
+    mockQueryBuilder.skip.mockReturnValue(mockQueryBuilder);
+    mockQueryBuilder.orderBy.mockReturnValue(mockQueryBuilder);
+    mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
     userRepository = createMock<UserRepository>();
-    userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+    userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
     cacheManager = createMock<Cache>();
 
@@ -100,7 +97,7 @@ describe('UserService', () => {
 
     it('should throw ConflictException when email already exists', async () => {
       const mockQueryBuilder = userRepository.createQueryBuilder('user');
-      (mockQueryBuilder.getOne as jest.Mock).mockResolvedValue(mockUser); // Existing user found
+      (mockQueryBuilder.getOne as jest.Mock).mockResolvedValue(mockUser);
 
       await expect(userService.createUser(createUserDto)).rejects.toThrow(ConflictException);
       expect(userRepository.createQueryBuilder).toHaveBeenCalled();
