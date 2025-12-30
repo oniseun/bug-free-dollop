@@ -7,12 +7,18 @@ import { CommonModule } from './modules/common/common.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { LoggerModule } from 'nestjs-pino';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync(typeormModuleOptions),
     LoggerModule.forRoot(),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60000,
+      max: 100,
+    }),
     CommonModule,
     UsersModule,
     ProductsModule,
