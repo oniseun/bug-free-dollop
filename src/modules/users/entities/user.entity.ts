@@ -32,7 +32,7 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Product, (product) => product.user)
+  @OneToMany(() => Product, (product) => product.user, { cascade: true })
   products: Product[];
 
   @Column({
@@ -42,4 +42,3 @@ export class User {
   })
   role: UserRole;
 }
-
