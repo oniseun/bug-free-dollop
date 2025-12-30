@@ -10,7 +10,7 @@ try {
   // dotenv not available or no .env file, use process.env directly
 }
 
-export const LocalDataSource = new DataSource({
+const LocalDataSource = new DataSource({
   type: 'mysql',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306', 10),
@@ -21,10 +21,9 @@ export const LocalDataSource = new DataSource({
   entities: DB_ENTITIES,
   synchronize: false,
   migrations: DB_MIGRATIONS,
-  migrationsRun: false, // CLI runs migrations manually
+  migrationsRun: false,
   namingStrategy: new SnakeNamingStrategy(),
 });
 
-// Default export for CLI
 export default LocalDataSource;
 

@@ -23,7 +23,7 @@ export const typeormModuleOptions: TypeOrmModuleAsyncOptions = {
       entities: DB_ENTITIES,
       synchronize: false,
       migrations: DB_MIGRATIONS,
-      migrationsRun: true,
+      migrationsRun: false,
       namingStrategy: new SnakeNamingStrategy(),
     };
   },

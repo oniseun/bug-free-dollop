@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
-echo "🚀 Starting application (migrations will run automatically)..."
+echo "🔄 Running database migrations..."
+npm run migration:run
+
+echo "✅ Migrations completed. Starting application..."
 exec npm run start:prod
 
