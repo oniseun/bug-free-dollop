@@ -8,9 +8,10 @@ module.exports = {
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    timezone: 'Z',
     entities: ['dist/**/*.entity.js'],
     logging: false,
-    migrations: ['dist/migrations/*.js'],
+    migrations: ['dist/database/migrations/*.js'],
     cli: {
         migrationsDir: 'src/database/migrations',
     },

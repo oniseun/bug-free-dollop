@@ -1,14 +1,76 @@
-version: '3'
+version: '3.8'
+
 services:
-  db:
+  mysql:
     image: mysql:8.0.34
+    container_name: eequ_mysql
+    restart: unless-stopped
     ports:
-      - 3306:3306
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: nestjs
+      MYSQL_DATABASE: eequ_recruit
+      MYSQL_USER: eequ_user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
     command: mysqld --sql_mode=""
+    networks:
+      - eequ_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7.4.0
+    container_name: eequ_redis
+    restart: unless-stopped
     ports:
-      - 6379:6379
+      - "6379:6379"
+    networks:
+      - eequ_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eequ_backend
+    working_dir: /app
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: password
+      DB_NAME: eequ_recruit
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: test
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - eequ_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  eequ_network:
+    driver: bridge

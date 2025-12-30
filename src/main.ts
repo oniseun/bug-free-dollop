@@ -2,18 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
-import { LoggerErrorInterceptor } from 'nestjs-pino';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-  });
-
-  const logger = app.get(Logger);
-  app.useLogger(logger);
-  app.useGlobalInterceptors(new LoggerErrorInterceptor());
+  const app = await NestFactory.create(AppModule);
 
   // Configure CORS
   app.enableCors({
@@ -46,7 +39,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(port, '0.0.0.0');
-  logger.log(`Application is running on: ${await app.getUrl()}/api`);
+  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
 }
 
 bootstrap();
