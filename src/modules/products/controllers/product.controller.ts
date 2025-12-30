@@ -19,6 +19,8 @@ import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { CurrentUser as CurrentUserType } from '../../auth/interfaces/jwt-payload.interface';
+import { Roles } from 'src/modules/auth/decorators/roles.decorator';
+import { UserRole } from 'src/modules/users/enums/user-role.enum';
 
 @ApiTags('Product')
 @ApiBearerAuth()
@@ -50,6 +52,7 @@ export class ProductController {
     return this.productService.getProduct(id);
   }
 
+  @Roles(UserRole.user, UserRole.admin)
   @Post()
   @ApiOperation({ summary: 'Create product', description: 'Create a new product. Admin can create for any user, regular users create for themselves.' })
   @ApiBody({ type: CreateProductDto, description: 'Product creation details' })
@@ -63,6 +66,7 @@ export class ProductController {
     return this.productService.createProduct(body, user);
   }
 
+  @Roles(UserRole.user, UserRole.admin)
   @Put(':id')
   @ApiOperation({ summary: 'Update product', description: 'Update an existing product. Only owner or admin can update.' })
   @ApiBody({ type: UpdateProductDto, description: 'Product update details' })
@@ -77,6 +81,7 @@ export class ProductController {
     return this.productService.updateProduct(id, body, user);
   }
 
+  @Roles(UserRole.user, UserRole.admin)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete product', description: 'Delete a product by its ID. Only owner or admin can delete.' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })

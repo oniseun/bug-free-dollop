@@ -28,7 +28,8 @@ import { CurrentUser as CurrentUserType } from '../../auth/interfaces/jwt-payloa
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Roles(UserRole.admin)
+  @Public()
+  @Roles(UserRole.user, UserRole.admin)
   @Get()
   @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search. Admin only.' })
   @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for user first name' })
@@ -37,17 +38,22 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: PageDto })
   async find(
     @Query() query: PaginationDto,
+    @CurrentUser() currentUser: CurrentUserType,
   ): Promise<ResponseFormat<PageDto<UserDto>>> {
-    return this.userService.findUsers(query);
+    return this.userService.findUsers(query, currentUser);
   }
 
-  @Roles(UserRole.admin)
+  @Public()
+  @Roles(UserRole.user, UserRole.admin)
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier. Admin only.' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getUser(@Param('id') id: number): Promise<ResponseFormat<UserDto>> {
-    return this.userService.getUser(id);
+  async getUser(
+    @Param('id') id: number,
+    @CurrentUser() user: CurrentUserType,
+  ): Promise<ResponseFormat<UserDto>> {
+    return this.userService.getUser(id, user);
   }
 
   @Public()
@@ -63,6 +69,7 @@ export class UserController {
     return this.userService.createUser(body);
   }
 
+  @Roles(UserRole.user, UserRole.admin)
   @Put(':id')
   @ApiOperation({ summary: 'Update user', description: 'Update an existing user profile. Admin can update any user, users can update themselves.' })
   @ApiBody({ type: UpdateUserDto, description: 'User update details' })

@@ -30,7 +30,10 @@ export class UserService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async findUsers(query: PaginationDto): Promise<ResponseFormat<PageDto<UserDto>>> {
+  async findUsers(
+    query: PaginationDto,
+    currentUser: CurrentUser,
+  ): Promise<ResponseFormat<PageDto<UserDto>>> {
     const { limit, offset, search } = query;
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
@@ -47,7 +50,12 @@ export class UserService {
         .orderBy('user.createdDate', 'DESC')
         .getManyAndCount();
 
-      const dtos = users.map(UserDto.fromEntity);
+      const dtos = users.map((user) =>
+        UserDto.fromEntity(
+          user,
+          currentUser.role === UserRole.admin || currentUser.userId === user.id,
+        ),
+      );
 
       return new ResponseFormat(
         true,
@@ -60,53 +68,54 @@ export class UserService {
     }
   }
 
-  async getUser(id: number): Promise<ResponseFormat<UserDto>> {
+  async getUser(
+    id: number,
+    currentUser?: CurrentUser,
+  ): Promise<ResponseFormat<UserDto>> {
     try {
       const cacheKey = `user_${id}`;
-      const cachedUser = await this.cacheManager.get<UserDto>(cacheKey);
-
-      if (cachedUser) {
-        return new ResponseFormat(
-          true,
-          'User retrieved successfully (from cache)',
-          cachedUser,
-        );
-      }
-
-      const user = await this.userRepository.findOneById(id);
-
+      let user = await this.cacheManager.get<User>(cacheKey);
       if (!user) {
-        this.logger.warn(`User with ID ${id} not found`);
-        throw new NotFoundException(
-          new ResponseFormat(false, 'User not found')
-        );
+        user = await this.userRepository.findOneById(id);
+
+        if (!user) {
+          this.logger.warn(`User with ID ${id} not found`);
+          throw new NotFoundException(
+            new ResponseFormat(false, 'User not found'),
+          );
+        }
+        await this.cacheManager.set(cacheKey, user);
       }
-
-      const userDto = UserDto.fromEntity(user);
-      await this.cacheManager.set(cacheKey, userDto);
-
-      return new ResponseFormat(
-        true,
-        'User retrieved successfully',
-        userDto,
+      const userDto = UserDto.fromEntity(
+        user,
+        currentUser?.role === UserRole.admin ||
+          currentUser?.userId === user.id,
       );
+
+      return new ResponseFormat(true, 'User retrieved successfully', userDto);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Error getting user ${id}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting user ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
 
   async createUser(dto: CreateUserDto): Promise<ResponseFormat<UserDto>> {
     try {
-      const existingUser = await this.userRepository.createQueryBuilder('user')
+      const existingUser = await this.userRepository
+        .createQueryBuilder('user')
         .where('user.email = :email', { email: dto.email })
         .getOne();
 
       if (existingUser) {
-        this.logger.warn(`Attempt to create user with existing email: ${dto.email}`);
+        this.logger.warn(
+          `Attempt to create user with existing email: ${dto.email}`,
+        );
         throw new ConflictException(
-          new ResponseFormat(false, 'Email already exists')
+          new ResponseFormat(false, 'Email already exists'),
         );
       }
 
@@ -124,7 +133,7 @@ export class UserService {
       return new ResponseFormat(
         true,
         'User created successfully',
-        UserDto.fromEntity(createdUser),
+        UserDto.fromEntity(createdUser, true),
       );
     } catch (error) {
       if (error instanceof ConflictException) throw error;
@@ -136,7 +145,7 @@ export class UserService {
   async updateUser(
     id: number,
     dto: UpdateUserDto,
-    currentUser?: CurrentUser,
+    currentUser: CurrentUser,
   ): Promise<ResponseFormat<UserDto>> {
     try {
       const user = await this.userRepository.findOneById(id);
@@ -144,32 +153,38 @@ export class UserService {
       if (!user) {
         this.logger.warn(`User with ID ${id} not found for update`);
         throw new NotFoundException(
-          new ResponseFormat(false, 'User not found')
+          new ResponseFormat(false, 'User not found'),
         );
       }
 
       // Check if user is admin or updating themselves
-      if (currentUser) {
-        const isAdmin = currentUser.role === UserRole.admin;
-        const isSelf = currentUser.userId === id;
+      const isAdmin = currentUser.role === UserRole.admin;
+      const isSelf = currentUser.userId === id;
 
-        if (!isAdmin && !isSelf) {
-          this.logger.warn(`Forbidden access attempt to update user ${id} by user ${currentUser.userId}`);
-          throw new ForbiddenException(
-            new ResponseFormat(false, 'You do not have access to update this user')
-          );
-        }
+      if (!isAdmin && !isSelf) {
+        this.logger.warn(
+          `Forbidden access attempt to update user ${id} by user ${currentUser.userId}`,
+        );
+        throw new ForbiddenException(
+          new ResponseFormat(
+            false,
+            'You do not have access to update this user',
+          ),
+        );
       }
 
       if (dto.email !== undefined && dto.email !== user.email) {
-        const existingUser = await this.userRepository.createQueryBuilder('user')
+        const existingUser = await this.userRepository
+          .createQueryBuilder('user')
           .where('user.email = :email', { email: dto.email })
           .getOne();
 
         if (existingUser) {
-          this.logger.warn(`Attempt to update user ${id} to existing email: ${dto.email}`);
+          this.logger.warn(
+            `Attempt to update user ${id} to existing email: ${dto.email}`,
+          );
           throw new ConflictException(
-            new ResponseFormat(false, 'Email already exists')
+            new ResponseFormat(false, 'Email already exists'),
           );
         }
       }
@@ -187,15 +202,25 @@ export class UserService {
 
       await this.cacheManager.del(`user_${id}`);
 
-      this.logger.log(`User updated with ID ${updatedUser.id}${currentUser ? ` by user ${currentUser.userId}` : ''}`);
+      this.logger.log(
+        `User updated with ID ${updatedUser.id}${currentUser ? ` by user ${currentUser.userId}` : ''}`,
+      );
       return new ResponseFormat(
         true,
         'User updated successfully',
-        UserDto.fromEntity(updatedUser),
+        UserDto.fromEntity(updatedUser, true),
       );
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ConflictException || error instanceof ForbiddenException) throw error;
-      this.logger.error(`Error updating user ${id}: ${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException ||
+        error instanceof ForbiddenException
+      )
+        throw error;
+      this.logger.error(
+        `Error updating user ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -209,26 +234,37 @@ export class UserService {
       if (!user) {
         this.logger.warn(`User with ID ${id} not found for deletion`);
         throw new NotFoundException(
-          new ResponseFormat(false, 'User not found')
+          new ResponseFormat(false, 'User not found'),
         );
       }
 
       // Prevent self-deletion
       if (currentUser && currentUser.userId === id) {
-        this.logger.warn(`User ${currentUser.userId} attempted to delete themselves`);
+        this.logger.warn(
+          `User ${currentUser.userId} attempted to delete themselves`,
+        );
         throw new BadRequestException(
-          new ResponseFormat(false, 'You cannot delete your own account')
+          new ResponseFormat(false, 'You cannot delete your own account'),
         );
       }
 
       await this.userRepository.delete(id);
       await this.cacheManager.del(`user_${id}`);
 
-      this.logger.log(`User deleted with ID ${id}${currentUser ? ` by user ${currentUser.userId}` : ''}`);
+      this.logger.log(
+        `User deleted with ID ${id}${currentUser ? ` by user ${currentUser.userId}` : ''}`,
+      );
       return new ResponseFormat(true, 'User deleted successfully');
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
-      this.logger.error(`Error deleting user ${id}: ${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      )
+        throw error;
+      this.logger.error(
+        `Error deleting user ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
