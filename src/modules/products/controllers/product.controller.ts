@@ -19,8 +19,8 @@ import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { CurrentUser as CurrentUserType } from '../../auth/interfaces/jwt-payload.interface';
-import { Roles } from 'src/modules/auth/decorators/roles.decorator';
-import { UserRole } from 'src/modules/users/enums/user-role.enum';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../../users/enums/user-role.enum';
 
 @ApiTags('Product')
 @ApiBearerAuth()
