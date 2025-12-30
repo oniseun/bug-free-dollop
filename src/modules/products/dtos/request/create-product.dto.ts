@@ -1,24 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateProductDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'ID of the user creating the product' })
   @IsNumber()
+  @IsNotEmpty()
   userId: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Product identification number' })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
+  @MaxLength(50)
   number: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Title of the product' })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
+  @MaxLength(255)
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Detailed description of the product' })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   description: string;
 }
-
