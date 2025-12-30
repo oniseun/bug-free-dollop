@@ -29,29 +29,27 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Public()
-  @Roles(UserRole.user, UserRole.admin)
   @Get()
-  @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search. Admin only.' })
+  @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search. Public endpoint - admins see full email, others see masked.' })
   @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for user first name' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page', example: 10 })
   @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Pagination offset', example: 0 })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: PageDto })
   async find(
     @Query() query: PaginationDto,
-    @CurrentUser() currentUser: CurrentUserType,
+    @CurrentUser() currentUser?: CurrentUserType,
   ): Promise<ResponseFormat<PageDto<UserDto>>> {
     return this.userService.findUsers(query, currentUser);
   }
 
   @Public()
-  @Roles(UserRole.user, UserRole.admin)
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier. Admin only.' })
+  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier. Public endpoint - admins see full email, others see masked.' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(
     @Param('id') id: number,
-    @CurrentUser() user: CurrentUserType,
+    @CurrentUser() user?: CurrentUserType,
   ): Promise<ResponseFormat<UserDto>> {
     return this.userService.getUser(id, user);
   }
@@ -69,7 +67,6 @@ export class UserController {
     return this.userService.createUser(body);
   }
 
-  @Roles(UserRole.user, UserRole.admin)
   @Put(':id')
   @ApiOperation({ summary: 'Update user', description: 'Update an existing user profile. Admin can update any user, users can update themselves.' })
   @ApiBody({ type: UpdateUserDto, description: 'User update details' })

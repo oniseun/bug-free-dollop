@@ -32,7 +32,7 @@ export class UserService {
 
   async findUsers(
     query: PaginationDto,
-    currentUser: CurrentUser,
+    currentUser?: CurrentUser,
   ): Promise<ResponseFormat<PageDto<UserDto>>> {
     const { limit, offset, search } = query;
     const queryBuilder = this.userRepository.createQueryBuilder('user');
@@ -53,7 +53,7 @@ export class UserService {
       const dtos = users.map((user) =>
         UserDto.fromEntity(
           user,
-          currentUser.role === UserRole.admin || currentUser.userId === user.id,
+          !!currentUser && (currentUser.role === UserRole.admin || currentUser.userId === user.id),
         ),
       );
 

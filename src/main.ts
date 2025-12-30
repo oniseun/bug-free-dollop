@@ -33,6 +33,7 @@ async function bootstrap() {
     .setTitle('Eequ Recruit API')
     .setDescription('API documentation for the Eequ Recruit application')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

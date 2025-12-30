@@ -17,17 +17,24 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
     if (isPublic) {
+      try {
+        await super.canActivate(context);
+      } catch (error) {
+
+        return true;
+      }
       return true;
     }
 
-    return super.canActivate(context);
+    // For protected routes, authentication is required
+    return (await super.canActivate(context)) as boolean;
   }
 
   handleRequest(err, user, info, context: ExecutionContext) {
