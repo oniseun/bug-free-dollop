@@ -104,9 +104,6 @@ export class ProductService {
 
     const createdProduct = await this.productRepository.save(product);
     
-    // Re-fetch to get relation or manually attach if simple
-    // createdProduct.user = user; 
-    
     return new ResponseFormat(
       true,
       'Product created successfully',
@@ -126,7 +123,8 @@ export class ProductService {
       );
     }
 
-    if (dto.userId !== undefined && product.userId !== dto.userId) {
+
+    if (product.userId !== dto.userId) {
       throw new ForbiddenException(
         new ResponseFormat(false, 'You do not have access to this product')
       );
@@ -135,7 +133,7 @@ export class ProductService {
     if (dto.title !== undefined) product.title = dto.title;
     if (dto.description !== undefined) product.description = dto.description;
     if (dto.number !== undefined) product.number = dto.number;
-    if (dto.userId !== undefined) product.userId = dto.userId;
+  
 
     const updatedProduct = await this.productRepository.save(product);
     
