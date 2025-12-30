@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { UserRepository } from '../repositories/user.repository';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
 import { UpdateUserDto } from '../dtos/request/update-user.dto';
@@ -6,10 +6,16 @@ import { UserDto } from '../dtos/response/user.dto';
 import { ResponseFormat } from '../../common/response-format';
 import { PageDto } from '../../common/dtos/page.dto';
 import { User } from '../entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async findUsers(query: {
     search?: string;
@@ -41,16 +47,32 @@ export class UserService {
   }
 
   async getUser(id: number): Promise<ResponseFormat<UserDto>> {
+    const cacheKey = `user_${id}`;
+    const cachedUser = await this.cacheManager.get<UserDto>(cacheKey);
+
+    if (cachedUser) {
+      return new ResponseFormat(
+        true,
+        'User retrieved successfully (from cache)',
+        cachedUser,
+      );
+    }
+
     const user = await this.userRepository.findOneById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(
+        new ResponseFormat(false, 'User not found')
+      );
     }
+
+    const userDto = UserDto.fromEntity(user);
+    await this.cacheManager.set(cacheKey, userDto);
 
     return new ResponseFormat(
       true,
       'User retrieved successfully',
-      UserDto.fromEntity(user),
+      userDto,
     );
   }
 
@@ -59,7 +81,8 @@ export class UserService {
     user.firstName = dto.firstName;
     user.lastName = dto.lastName;
     user.email = dto.email;
-    user.password = dto.password; // Note: In a real app, hash this!
+    const salt = await bcrypt.genSalt();
+    user.password = await bcrypt.hash(dto.password, salt);
     user.role = dto.role;
 
     const createdUser = await this.userRepository.save(user);
@@ -77,16 +100,25 @@ export class UserService {
     const user = await this.userRepository.findOneById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(
+        new ResponseFormat(false, 'User not found')
+      );
     }
 
     if (dto.firstName !== undefined) user.firstName = dto.firstName;
     if (dto.lastName !== undefined) user.lastName = dto.lastName;
     if (dto.email !== undefined) user.email = dto.email;
-    if (dto.password !== undefined) user.password = dto.password; // Should hash
+    if (dto.password !== undefined) {
+      const salt = await bcrypt.genSalt();
+      user.password = await bcrypt.hash(dto.password, salt);
+    }
     if (dto.role !== undefined) user.role = dto.role;
 
     const updatedUser = await this.userRepository.save(user);
+
+    // Invalidate cache
+    await this.cacheManager.del(`user_${id}`);
+
     return new ResponseFormat(
       true,
       'User updated successfully',
@@ -97,11 +129,14 @@ export class UserService {
   async deleteUser(id: number): Promise<ResponseFormat<void>> {
     const user = await this.userRepository.findOneById(id);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(
+        new ResponseFormat(false, 'User not found')
+      );
     }
 
     await this.userRepository.delete(id);
+    await this.cacheManager.del(`user_${id}`);
+
     return new ResponseFormat(true, 'User deleted successfully');
   }
 }
-
