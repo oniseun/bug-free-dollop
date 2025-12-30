@@ -1,6 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { AuthService } from './auth.service';
 import { UserRepository } from '../../users/repositories/user.repository';
 import { User } from '../../users/entities/user.entity';
@@ -11,18 +12,12 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let userRepository: jest.Mocked<UserRepository>;
-  let jwtService: jest.Mocked<JwtService>;
+  let userRepository: DeepMocked<UserRepository>;
+  let jwtService: DeepMocked<JwtService>;
 
   beforeEach(() => {
-    // Create mock instances
-    userRepository = {
-      findOneByEmail: jest.fn(),
-    } as unknown as jest.Mocked<UserRepository>;
-
-    jwtService = {
-      sign: jest.fn(),
-    } as unknown as jest.Mocked<JwtService>;
+    userRepository = createMock<UserRepository>();
+    jwtService = createMock<JwtService>();
 
     authService = new AuthService(userRepository, jwtService);
   });

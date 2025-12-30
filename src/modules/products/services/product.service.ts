@@ -103,10 +103,8 @@ export class ProductService {
     currentUser: CurrentUser,
   ): Promise<ResponseFormat<ProductDto>> {
     try {
-      // Always use currentUser.userId
       const userId = currentUser.userId;
 
-      // Check if user exists
       const user = await this.userRepository.findOneById(userId);
       if (!user) {
         this.logger.warn(`User with ID ${userId} not found during product creation`);

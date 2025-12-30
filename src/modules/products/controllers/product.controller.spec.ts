@@ -1,4 +1,5 @@
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { ProductController } from './product.controller';
 import { ProductService } from '../services/product.service';
 import { CreateProductDto } from '../dtos/request/create-product.dto';
@@ -12,7 +13,7 @@ import { UserRole } from '../../users/enums/user-role.enum';
 
 describe('ProductController', () => {
   let productController: ProductController;
-  let productService: jest.Mocked<ProductService>;
+  let productService: DeepMocked<ProductService>;
 
   const mockUser: CurrentUser = {
     userId: 1,
@@ -28,14 +29,7 @@ describe('ProductController', () => {
   };
 
   beforeEach(() => {
-    productService = {
-      findProducts: jest.fn(),
-      getProduct: jest.fn(),
-      createProduct: jest.fn(),
-      updateProduct: jest.fn(),
-      deleteProduct: jest.fn(),
-    } as unknown as jest.Mocked<ProductService>;
-
+    productService = createMock<ProductService>();
     productController = new ProductController(productService);
   });
 

@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import * as bcrypt from 'bcrypt';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { UserService } from './user.service';
 import { UserRepository } from '../repositories/user.repository';
 import { User } from '../entities/user.entity';
@@ -15,8 +16,8 @@ jest.mock('bcrypt');
 
 describe('UserService', () => {
   let userService: UserService;
-  let userRepository: jest.Mocked<UserRepository>;
-  let cacheManager: jest.Mocked<Cache>;
+  let userRepository: DeepMocked<UserRepository>;
+  let cacheManager: DeepMocked<Cache>;
 
   const mockUser: User = {
     id: 1,
@@ -51,19 +52,10 @@ describe('UserService', () => {
       getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
     };
 
-    userRepository = {
-      findOneByEmail: jest.fn(),
-      save: jest.fn(),
-      findOneById: jest.fn(),
-      delete: jest.fn(),
-      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
-    } as unknown as jest.Mocked<UserRepository>;
+    userRepository = createMock<UserRepository>();
+    userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
 
-    cacheManager = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-    } as unknown as jest.Mocked<Cache>;
+    cacheManager = createMock<Cache>();
 
     userService = new UserService(userRepository, cacheManager);
   });
@@ -341,7 +333,6 @@ describe('UserService', () => {
       userRepository.findOneById.mockResolvedValue(mockUser);
       
       const mockQueryBuilder = userRepository.createQueryBuilder('user');
-      // Mock finding an existing user with that email
       (mockQueryBuilder.getOne as jest.Mock).mockResolvedValue({ id: 999, email: 'existing@eequ.org' });
 
       await expect(

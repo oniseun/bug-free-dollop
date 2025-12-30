@@ -1,4 +1,5 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { UserController } from './user.controller';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
@@ -12,7 +13,7 @@ import { PageDto } from '../../common/dtos/page.dto';
 
 describe('UserController', () => {
   let userController: UserController;
-  let userService: jest.Mocked<UserService>;
+  let userService: DeepMocked<UserService>;
 
   const mockAdmin: CurrentUser = {
     userId: 1,
@@ -25,14 +26,7 @@ describe('UserController', () => {
   };
 
   beforeEach(() => {
-    userService = {
-      createUser: jest.fn(),
-      findUsers: jest.fn(),
-      getUser: jest.fn(),
-      updateUser: jest.fn(),
-      deleteUser: jest.fn(),
-    } as unknown as jest.Mocked<UserService>;
-
+    userService = createMock<UserService>();
     userController = new UserController(userService);
   });
 

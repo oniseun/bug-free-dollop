@@ -1,5 +1,6 @@
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Cache } from 'cache-manager';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { ProductService } from './product.service';
 import { ProductRepository } from '../repositories/product.repository';
 import { UserRepository } from '../../users/repositories/user.repository';
@@ -13,9 +14,9 @@ import { CurrentUser } from '../../auth/interfaces/jwt-payload.interface';
 
 describe('ProductService', () => {
   let productService: ProductService;
-  let productRepository: jest.Mocked<ProductRepository>;
-  let userRepository: jest.Mocked<UserRepository>;
-  let cacheManager: jest.Mocked<Cache>;
+  let productRepository: DeepMocked<ProductRepository>;
+  let userRepository: DeepMocked<UserRepository>;
+  let cacheManager: DeepMocked<Cache>;
 
   const mockUser: User = {
     id: 1,
@@ -51,25 +52,9 @@ describe('ProductService', () => {
   };
 
   beforeEach(() => {
-    // Mock ProductRepository
-    productRepository = {
-      createQueryBuilder: jest.fn(),
-      findOneById: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-    } as unknown as jest.Mocked<ProductRepository>;
-
-    // Mock UserRepository
-    userRepository = {
-      findOneById: jest.fn(),
-    } as unknown as jest.Mocked<UserRepository>;
-
-    // Mock Cache
-    cacheManager = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-    } as unknown as jest.Mocked<Cache>;
+    productRepository = createMock<ProductRepository>();
+    userRepository = createMock<UserRepository>();
+    cacheManager = createMock<Cache>();
 
     productService = new ProductService(
       productRepository,

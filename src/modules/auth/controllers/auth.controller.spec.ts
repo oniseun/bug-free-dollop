@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { AuthController } from './auth.controller';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dtos/request/login.dto';
@@ -6,13 +7,10 @@ import { ResponseFormat } from '../../common/response-format';
 
 describe('AuthController', () => {
   let authController: AuthController;
-  let authService: jest.Mocked<AuthService>;
+  let authService: DeepMocked<AuthService>;
 
   beforeEach(() => {
-    authService = {
-      login: jest.fn(),
-    } as unknown as jest.Mocked<AuthService>;
-
+    authService = createMock<AuthService>();
     authController = new AuthController(authService);
   });
 
