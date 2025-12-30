@@ -15,7 +15,10 @@ export class ProductRepository {
   }
 
   async findOneById(id: number): Promise<Product | null> {
-    return this.repository.findOne({ where: { id } });
+    return this.repository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
   }
 
   async save(product: Product): Promise<Product> {
@@ -26,4 +29,3 @@ export class ProductRepository {
     await this.repository.delete(id);
   }
 }
-
