@@ -19,6 +19,8 @@ import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../enums/user-role.enum';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { CurrentUser as CurrentUserType } from '../../auth/interfaces/jwt-payload.interface';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -28,7 +30,7 @@ export class UserController {
 
   @Roles(UserRole.admin)
   @Get()
-  @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search.' })
+  @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search. Admin only.' })
   @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for user first name' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page', example: 10 })
   @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Pagination offset', example: 0 })
@@ -41,14 +43,14 @@ export class UserController {
 
   @Roles(UserRole.admin)
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier.' })
+  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier. Admin only.' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(@Param('id') id: number): Promise<ResponseFormat<UserDto>> {
     return this.userService.getUser(id);
   }
 
-  @Public() // Allow registration
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Create user', description: 'Register a new user.' })
   @ApiBody({ type: CreateUserDto, description: 'User creation details' })
@@ -61,26 +63,31 @@ export class UserController {
     return this.userService.createUser(body);
   }
 
-  @Roles(UserRole.admin) // Only admin can update users for now (or implement self-update logic)
   @Put(':id')
-  @ApiOperation({ summary: 'Update user', description: 'Update an existing user profile.' })
+  @ApiOperation({ summary: 'Update user', description: 'Update an existing user profile. Admin can update any user, users can update themselves.' })
   @ApiBody({ type: UpdateUserDto, description: 'User update details' })
   @ApiResponse({ status: 200, description: 'User updated successfully', type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not admin or self' })
   async updateUser(
     @Param('id') id: number,
     @Body() body: UpdateUserDto,
+    @CurrentUser() user: CurrentUserType,
   ): Promise<ResponseFormat<UserDto>> {
-    return this.userService.updateUser(id, body);
+    return this.userService.updateUser(id, body, user);
   }
 
   @Roles(UserRole.admin)
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete user', description: 'Delete a user account.' })
+  @ApiOperation({ summary: 'Delete user', description: 'Delete a user account. Admin only. Cannot delete yourself.' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id') id: number): Promise<ResponseFormat<void>> {
-    return this.userService.deleteUser(id);
+  @ApiResponse({ status: 400, description: 'Cannot delete yourself' })
+  async delete(
+    @Param('id') id: number,
+    @CurrentUser() user: CurrentUserType,
+  ): Promise<ResponseFormat<void>> {
+    return this.userService.deleteUser(id, user);
   }
 }

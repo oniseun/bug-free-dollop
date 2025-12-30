@@ -4,6 +4,8 @@ import {
   Inject,
   ConflictException,
   Logger,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { UserRepository } from '../repositories/user.repository';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
@@ -16,6 +18,8 @@ import * as bcrypt from 'bcrypt';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
+import { UserRole } from '../enums/user-role.enum';
+import { CurrentUser } from '../../auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class UserService {
@@ -95,7 +99,6 @@ export class UserService {
 
   async createUser(dto: CreateUserDto): Promise<ResponseFormat<UserDto>> {
     try {
-      // Check for existing email
       const existingUser = await this.userRepository.createQueryBuilder('user')
         .where('user.email = :email', { email: dto.email })
         .getOne();
@@ -133,6 +136,7 @@ export class UserService {
   async updateUser(
     id: number,
     dto: UpdateUserDto,
+    currentUser?: CurrentUser,
   ): Promise<ResponseFormat<UserDto>> {
     try {
       const user = await this.userRepository.findOneById(id);
@@ -142,6 +146,19 @@ export class UserService {
         throw new NotFoundException(
           new ResponseFormat(false, 'User not found')
         );
+      }
+
+      // Check if user is admin or updating themselves
+      if (currentUser) {
+        const isAdmin = currentUser.role === UserRole.admin;
+        const isSelf = currentUser.userId === id;
+
+        if (!isAdmin && !isSelf) {
+          this.logger.warn(`Forbidden access attempt to update user ${id} by user ${currentUser.userId}`);
+          throw new ForbiddenException(
+            new ResponseFormat(false, 'You do not have access to update this user')
+          );
+        }
       }
 
       if (dto.email !== undefined && dto.email !== user.email) {
@@ -168,23 +185,25 @@ export class UserService {
 
       const updatedUser = await this.userRepository.save(user);
 
-      // Invalidate cache
       await this.cacheManager.del(`user_${id}`);
 
-      this.logger.log(`User updated with ID ${updatedUser.id}`);
+      this.logger.log(`User updated with ID ${updatedUser.id}${currentUser ? ` by user ${currentUser.userId}` : ''}`);
       return new ResponseFormat(
         true,
         'User updated successfully',
         UserDto.fromEntity(updatedUser),
       );
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ConflictException) throw error;
+      if (error instanceof NotFoundException || error instanceof ConflictException || error instanceof ForbiddenException) throw error;
       this.logger.error(`Error updating user ${id}: ${error.message}`, error.stack);
       throw error;
     }
   }
 
-  async deleteUser(id: number): Promise<ResponseFormat<void>> {
+  async deleteUser(
+    id: number,
+    currentUser?: CurrentUser,
+  ): Promise<ResponseFormat<void>> {
     try {
       const user = await this.userRepository.findOneById(id);
       if (!user) {
@@ -194,13 +213,21 @@ export class UserService {
         );
       }
 
+      // Prevent self-deletion
+      if (currentUser && currentUser.userId === id) {
+        this.logger.warn(`User ${currentUser.userId} attempted to delete themselves`);
+        throw new BadRequestException(
+          new ResponseFormat(false, 'You cannot delete your own account')
+        );
+      }
+
       await this.userRepository.delete(id);
       await this.cacheManager.del(`user_${id}`);
 
-      this.logger.log(`User deleted with ID ${id}`);
+      this.logger.log(`User deleted with ID ${id}${currentUser ? ` by user ${currentUser.userId}` : ''}`);
       return new ResponseFormat(true, 'User deleted successfully');
     } catch (error) {
-      if (error instanceof NotFoundException) throw error;
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
       this.logger.error(`Error deleting user ${id}: ${error.message}`, error.stack);
       throw error;
     }

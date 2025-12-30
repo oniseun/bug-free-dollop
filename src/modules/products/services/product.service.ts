@@ -16,6 +16,8 @@ import { UserRepository } from '../../users/repositories/user.repository';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
+import { UserRole } from '../../users/enums/user-role.enum';
+import { CurrentUser } from '../../auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class ProductService {
@@ -31,7 +33,6 @@ export class ProductService {
     const { limit, offset, search } = query;
     const queryBuilder = this.productRepository.createQueryBuilder('product');
     
-    // Join user relation
     queryBuilder.leftJoinAndSelect('product.user', 'user');
 
     if (search) {
@@ -99,26 +100,30 @@ export class ProductService {
 
   async createProduct(
     dto: CreateProductDto,
+    currentUser: CurrentUser,
   ): Promise<ResponseFormat<ProductDto>> {
     try {
+      // Always use currentUser.userId
+      const userId = currentUser.userId;
+
       // Check if user exists
-      const user = await this.userRepository.findOneById(dto.userId);
+      const user = await this.userRepository.findOneById(userId);
       if (!user) {
-        this.logger.warn(`User with ID ${dto.userId} not found during product creation`);
+        this.logger.warn(`User with ID ${userId} not found during product creation`);
         throw new NotFoundException(
           new ResponseFormat(false, 'User not found')
         );
       }
 
       const product = new Product();
-      product.userId = dto.userId;
+      product.userId = userId;
       product.title = dto.title;
       product.description = dto.description;
       product.number = dto.number;
 
       const createdProduct = await this.productRepository.save(product);
       
-      this.logger.log(`Product created with ID ${createdProduct.id}`);
+      this.logger.log(`Product created with ID ${createdProduct.id} by user ${currentUser.userId}`);
       return new ResponseFormat(
         true,
         'Product created successfully',
@@ -134,6 +139,7 @@ export class ProductService {
   async updateProduct(
     id: number,
     dto: UpdateProductDto,
+    currentUser: CurrentUser,
   ): Promise<ResponseFormat<ProductDto>> {
     try {
       const product = await this.productRepository.findOneById(id);
@@ -145,10 +151,14 @@ export class ProductService {
         );
       }
 
-      if (product.userId !== dto.userId) {
-        this.logger.warn(`Forbidden access attempt to update product ${id} by user ${dto.userId}`);
+      // Check if user is admin or owner
+      const isAdmin = currentUser.role === UserRole.admin;
+      const isOwner = product.userId === currentUser.userId;
+
+      if (!isAdmin && !isOwner) {
+        this.logger.warn(`Forbidden access attempt to update product ${id} by user ${currentUser.userId}`);
         throw new ForbiddenException(
-          new ResponseFormat(false, 'You do not have access to this product')
+          new ResponseFormat(false, 'You do not have access to update this product')
         );
       }
 
@@ -158,10 +168,9 @@ export class ProductService {
 
       const updatedProduct = await this.productRepository.save(product);
       
-      // Invalidate cache
       await this.cacheManager.del(`product_${id}`);
 
-      this.logger.log(`Product updated with ID ${updatedProduct.id}`);
+      this.logger.log(`Product updated with ID ${updatedProduct.id} by user ${currentUser.userId}`);
       return new ResponseFormat(
         true,
         'Product updated successfully',
@@ -174,7 +183,10 @@ export class ProductService {
     }
   }
 
-  async deleteProduct(id: number): Promise<ResponseFormat<void>> {
+  async deleteProduct(
+    id: number,
+    currentUser: CurrentUser,
+  ): Promise<ResponseFormat<void>> {
     try {
       const product = await this.productRepository.findOneById(id);
       if (!product) {
@@ -184,13 +196,24 @@ export class ProductService {
         );
       }
 
+      // Check if user is admin or owner
+      const isAdmin = currentUser.role === UserRole.admin;
+      const isOwner = product.userId === currentUser.userId;
+
+      if (!isAdmin && !isOwner) {
+        this.logger.warn(`Forbidden access attempt to delete product ${id} by user ${currentUser.userId}`);
+        throw new ForbiddenException(
+          new ResponseFormat(false, 'You do not have permission to delete this product')
+        );
+      }
+
       await this.productRepository.delete(id);
       await this.cacheManager.del(`product_${id}`);
 
-      this.logger.log(`Product deleted with ID ${id}`);
+      this.logger.log(`Product deleted with ID ${id} by user ${currentUser.userId}`);
       return new ResponseFormat(true, 'Product deleted successfully');
     } catch (error) {
-      if (error instanceof NotFoundException) throw error;
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) throw error;
       this.logger.error(`Error deleting product ${id}: ${error.message}`, error.stack);
       throw error;
     }

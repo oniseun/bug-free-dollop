@@ -7,7 +7,6 @@ import {
   Post,
   Put,
   Query,
-  ForbiddenException,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductService } from '../services/product.service';
@@ -19,7 +18,7 @@ import { ProductDto } from '../dtos/response/product.dto';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { UserRole } from '../../users/enums/user-role.enum';
+import { CurrentUser as CurrentUserType } from '../../auth/interfaces/jwt-payload.interface';
 
 @ApiTags('Product')
 @ApiBearerAuth()
@@ -52,62 +51,41 @@ export class ProductController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create product', description: 'Create a new product associated with a user.' })
+  @ApiOperation({ summary: 'Create product', description: 'Create a new product. Admin can create for any user, regular users create for themselves.' })
   @ApiBody({ type: CreateProductDto, description: 'Product creation details' })
   @ApiResponse({ status: 201, description: 'Product created successfully', type: ProductDto })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async createProduct(
     @Body() body: CreateProductDto,
-    @CurrentUser() user: { userId: number, role: UserRole }
+    @CurrentUser() user: CurrentUserType
   ): Promise<ResponseFormat<ProductDto>> {
-    // Optional: Enforce that user can only create product for themselves if not admin
-    if (user.role !== UserRole.admin && body.userId !== user.userId) {
-        throw new ForbiddenException(new ResponseFormat(false, 'You can only create products for yourself'));
-    }
-    return this.productService.createProduct(body);
+    return this.productService.createProduct(body, user);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update product', description: 'Update an existing product.' })
+  @ApiOperation({ summary: 'Update product', description: 'Update an existing product. Only owner or admin can update.' })
   @ApiBody({ type: UpdateProductDto, description: 'Product update details' })
   @ApiResponse({ status: 200, description: 'Product updated successfully', type: ProductDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  @ApiResponse({ status: 403, description: 'Forbidden access' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not owner or admin' })
   async updateProduct(
     @Param('id') id: number,
     @Body() body: UpdateProductDto,
-    @CurrentUser() user: { userId: number, role: UserRole }
+    @CurrentUser() user: CurrentUserType
   ): Promise<ResponseFormat<ProductDto>> {
-    // Authorization logic is partly in service (checking existing owner vs dto), 
-    // but we should also check if the CURRENT user is allowed to perform this update.
-    // If user is admin, they can update anyone's product (but service currently enforces dto.userId == product.userId).
-    // The service check "product.userId !== dto.userId" ensures the product isn't being transferred or claimed by mismatch.
-    // We also need to ensure `user.userId` (from token) matches `dto.userId` OR `user.role` is admin.
-    
-    if (user.role !== UserRole.admin && body.userId !== user.userId) {
-       throw new ForbiddenException(new ResponseFormat(false, 'You do not have access to update this product'));
-    }
-
-    return this.productService.updateProduct(id, body);
+    return this.productService.updateProduct(id, body, user);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete product', description: 'Delete a product by its ID. Requires Admin or Owner.' })
+  @ApiOperation({ summary: 'Delete product', description: 'Delete a product by its ID. Only owner or admin can delete.' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not owner or admin' })
   async delete(
     @Param('id') id: number,
-    @CurrentUser() user: { userId: number, role: UserRole }
+    @CurrentUser() user: CurrentUserType
   ): Promise<ResponseFormat<void>> {
-    // Check ownership or admin role
-    const productResponse = await this.productService.getProduct(id);
-    const product = productResponse.data; // Assuming data contains the DTO
-
-    if (user.role !== UserRole.admin && product.userId !== user.userId) {
-        throw new ForbiddenException(new ResponseFormat(false, 'You do not have permission to delete this product'));
-    }
-
-    return this.productService.deleteProduct(id);
+    return this.productService.deleteProduct(id, user);
   }
 }
