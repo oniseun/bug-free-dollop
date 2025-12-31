@@ -9,6 +9,7 @@ import { ProductDto } from '../dtos/response/product.dto';
 import { CreateProductDto } from '../dtos/request/create-product.dto';
 import { UpdateProductDto } from '../dtos/request/update-product.dto';
 import { PageDto } from '../../common/dtos/page.dto';
+import { UserRole } from '../../users/enums/user-role.enum';
 
 describe('/product', () => {
   let app: INestApplication;
@@ -38,6 +39,19 @@ describe('/product', () => {
 
   const getAccessToken = (user: any) => {
     return jwtService.sign({ sub: user.id, role: user.role });
+  };
+
+  const uniqueEmail = (prefix: string) =>
+    `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`;
+
+  const createUserEntity = (overrides: {
+    role?: UserRole;
+    email?: string;
+  } = {}) => {
+    return testService.user.create({
+      role: overrides.role ?? UserRole.user,
+      email: overrides.email ?? uniqueEmail('user'),
+    });
   };
 
   describe('GET / (Public Access)', () => {
@@ -199,6 +213,101 @@ describe('/product', () => {
       const user = await testService.user.create();
       const product = await testService.product.createItem({ userId: user.id });
       const token = getAccessToken(user);
+
+      await request(app.getHttpServer())
+        .delete(`/product/${product.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+    });
+  });
+
+  describe('Authorization requirements', () => {
+    const productPayload: CreateProductDto = {
+      number: 'xyz-123',
+      title: 'No Auth Product',
+      description: 'Should never be created because no token is provided',
+    };
+
+    it('requires authentication to create a product', async () => {
+      await request(app.getHttpServer())
+        .post('/product')
+        .send(productPayload)
+        .expect(401);
+    });
+
+    it('requires authentication to update a product', async () => {
+      const owner = await createUserEntity();
+      const product = await testService.product.createItem({ userId: owner.id });
+
+      await request(app.getHttpServer())
+        .put(`/product/${product.id}`)
+        .send({ title: 'unauthorized update' })
+        .expect(401);
+    });
+
+    it('requires authentication to delete a product', async () => {
+      const owner = await createUserEntity();
+      const product = await testService.product.createItem({ userId: owner.id });
+
+      await request(app.getHttpServer())
+        .delete(`/product/${product.id}`)
+        .expect(401);
+    });
+
+    it('prevents non-owners from updating a product', async () => {
+      const owner = await createUserEntity();
+      const otherUser = await createUserEntity();
+      const product = await testService.product.createItem({ userId: owner.id });
+      const token = getAccessToken(otherUser);
+
+      const response = await request(app.getHttpServer())
+        .put(`/product/${product.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Intruder update' })
+        .expect(403);
+
+      expect(response.body.message).toBe(
+        'You do not have access to update this product',
+      );
+    });
+
+    it('prevents non-owners from deleting a product', async () => {
+      const owner = await createUserEntity();
+      const otherUser = await createUserEntity();
+      const product = await testService.product.createItem({ userId: owner.id });
+      const token = getAccessToken(otherUser);
+
+      const response = await request(app.getHttpServer())
+        .delete(`/product/${product.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+
+      expect(response.body.message).toBe(
+        'You do not have permission to delete this product',
+      );
+    });
+
+    it('allows admins to update products they do not own', async () => {
+      const owner = await createUserEntity({ role: UserRole.user });
+      const admin = await createUserEntity({ role: UserRole.admin });
+      const product = await testService.product.createItem({ userId: owner.id });
+      const token = getAccessToken(admin);
+
+      const response = await request(app.getHttpServer())
+        .put(`/product/${product.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Admin update' })
+        .expect(200);
+
+      const result = response.body.data as ProductDto;
+      expect(result.title).toBe('Admin update');
+    });
+
+    it('allows admins to delete products they do not own', async () => {
+      const owner = await createUserEntity({ role: UserRole.user });
+      const admin = await createUserEntity({ role: UserRole.admin });
+      const product = await testService.product.createItem({ userId: owner.id });
+      const token = getAccessToken(admin);
 
       await request(app.getHttpServer())
         .delete(`/product/${product.id}`)

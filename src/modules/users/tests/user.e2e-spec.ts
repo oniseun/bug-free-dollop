@@ -41,6 +41,70 @@ describe('/user', () => {
     return jwtService.sign({ sub: user.id, role: user.role });
   };
 
+  const uniqueEmail = (prefix: string) =>
+    `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`;
+
+  const makeUserPayload = (
+    overrides: Partial<CreateUserDto> = {},
+  ): CreateUserDto => ({
+    firstName: 'Test',
+    lastName: 'User',
+    email: uniqueEmail('user'),
+    password: 'testPass123',
+    role: UserRole.user,
+    ...overrides,
+  });
+
+  const registerUser = async (overrides?: Partial<CreateUserDto>) => {
+    const payload = makeUserPayload(overrides);
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send(payload)
+      .expect(201);
+
+    return {
+      payload,
+      dto: response.body.data as UserDto,
+    };
+  };
+
+  const loginUser = async (email: string, password: string) => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email, password })
+      .expect(200);
+
+    return response.body.data.accessToken as string;
+  };
+
+  describe('Authentication & registration', () => {
+    it('registers a new user', async () => {
+      const { payload, dto } = await registerUser();
+
+      expect(dto.email).toBe(payload.email);
+      expect(dto.firstName).toBe(payload.firstName);
+      expect(dto.role).toBe(payload.role);
+    });
+
+    it('allows a registered user to log in', async () => {
+      const payload = makeUserPayload({ password: 'loginPassword123' });
+      await request(app.getHttpServer()).post('/user').send(payload).expect(201);
+      const token = await loginUser(payload.email, payload.password);
+
+      expect(token).toBeDefined();
+    });
+
+    it('allows an admin to log in', async () => {
+      const { payload } = await registerUser({
+        password: 'adminPass123',
+        role: UserRole.admin,
+      });
+      const token = await loginUser(payload.email, payload.password);
+
+      expect(token).toBeDefined();
+    });
+  });
+
   describe('GET / search user', () => {
     it('GET /', async () => {
       const user = await testService.user.create();
@@ -119,6 +183,75 @@ describe('/user', () => {
       const result = results.at(0);
       expect(result.id).toBe(user2.id);
       expect(result.firstName).toBe(user2.firstName);
+    });
+  });
+
+  describe('Authorization guards', () => {
+    it('rejects updating another user when not admin', async () => {
+      const userA = await testService.user.create({
+        role: UserRole.user,
+        email: uniqueEmail('userA'),
+      });
+      const userB = await testService.user.create({
+        role: UserRole.user,
+        email: uniqueEmail('userB'),
+      });
+      const token = getAccessToken(userA);
+
+      const response = await request(app.getHttpServer())
+        .put(`/user/${userB.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ firstName: 'Intruder' })
+        .expect(403);
+
+      expect(response.body.message).toBe(
+        'You do not have access to update this user',
+      );
+    });
+
+    it('returns 401 when updating without auth', async () => {
+      await request(app.getHttpServer())
+        .put('/user/1')
+        .send({ firstName: 'NoAuth' })
+        .expect(401);
+    });
+
+    it('prevents non-admins from deleting other users', async () => {
+      const nonAdmin = await testService.user.create({
+        role: UserRole.user,
+        email: uniqueEmail('nonAdmin'),
+      });
+      const targetUser = await testService.user.create({
+        role: UserRole.user,
+        email: uniqueEmail('target'),
+      });
+      const token = getAccessToken(nonAdmin);
+
+      const response = await request(app.getHttpServer())
+        .delete(`/user/${targetUser.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
+
+      expect(response.body.message).toBe('Forbidden resource');
+    });
+
+    it('returns 401 when deleting without auth', async () => {
+      await request(app.getHttpServer()).delete('/user/1').expect(401);
+    });
+
+    it('prevents admin from deleting themselves', async () => {
+      const adminUser = await testService.user.create({
+        role: UserRole.admin,
+        email: uniqueEmail('selfAdmin'),
+      });
+      const token = getAccessToken(adminUser);
+
+      const response = await request(app.getHttpServer())
+        .delete(`/user/${adminUser.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body.message).toBe('You cannot delete your own account');
     });
   });
 

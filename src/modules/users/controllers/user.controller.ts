@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -48,7 +49,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user?: CurrentUserType,
   ): Promise<ResponseFormat<UserDto>> {
     return this.userService.getUser(id, user);
@@ -75,7 +76,7 @@ export class UserController {
   @ApiResponse({ status: 409, description: 'Email already exists' })
   @ApiResponse({ status: 403, description: 'Forbidden - not admin or self' })
   async updateUser(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateUserDto,
     @CurrentUser() user: CurrentUserType,
   ): Promise<ResponseFormat<UserDto>> {
@@ -89,7 +90,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 400, description: 'Cannot delete yourself' })
   async delete(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserType,
   ): Promise<ResponseFormat<void>> {
     return this.userService.deleteUser(id, user);
