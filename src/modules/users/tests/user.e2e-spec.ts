@@ -42,7 +42,7 @@ describe('/user', () => {
   };
 
   const uniqueEmail = (prefix: string) =>
-    `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`;
+    `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@eequ.org`;
 
   const makeUserPayload = (
     overrides: Partial<CreateUserDto> = {},
