@@ -130,8 +130,6 @@ This document outlines the key architectural changes and design decisions implem
 
 - **Naming Conventions**: Used clear, descriptive names for files, classes, and methods following NestJS conventions (e.g., `*.controller.ts`, `*.service.ts`, `*.dto.ts`).
 
-- **Type Safety**: Eliminated `any` types throughout the codebase, using proper TypeScript interfaces, types, and generics for all function parameters and return values.
-
 - **Documentation**: Added comprehensive Swagger decorators for API documentation. Code is self-documenting through clear naming conventions and proper type annotations.
 
 - **Separation of Concerns**: Controllers handle HTTP concerns (request/response), services handle business logic, repositories handle data access, and DTOs handle validation and transformation.
