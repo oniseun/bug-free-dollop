@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../enums/user-role.enum';
 import { User } from '../../entities/user.entity';
-import { maskEmail } from 'src/modules/common/utils/email-mask.util';
 
 export class UserDto {
   @ApiProperty()
@@ -13,11 +12,11 @@ export class UserDto {
   @ApiProperty()
   lastName: string;
 
-  @ApiProperty({ description: 'email address' })
-  email: string;
+  @ApiProperty({ description: 'email address', required: false })
+  email?: string;
 
-  @ApiProperty({ enum: UserRole })
-  role: UserRole;
+  @ApiProperty({ enum: UserRole, required: false })
+  role?: UserRole;
 
   static fromEntity(entity: User, displaySensitiveData: boolean = false): UserDto {
     const dto = new UserDto();

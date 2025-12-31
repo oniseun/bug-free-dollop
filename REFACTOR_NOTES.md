@@ -1,6 +1,6 @@
 # Refactor Notes: Eequ Recruit Backend
 
-This document outlines the key architectural changes and design decisions implemented to align the `eequ-recruit` codebase with the standards observed in `fliq-backend`.
+This document outlines the key architectural changes and design decisions implemented to modernize the `eequ-recruit` codebase following industry best practices and NestJS conventions.
 
 ## 1. Architecture & Modularization
 
@@ -8,7 +8,7 @@ This document outlines the key architectural changes and design decisions implem
 
 - **Service-Repository Pattern**: Separated business logic (Services) from data access (Repositories), improving testability and separation of concerns. Repositories handle all TypeORM QueryBuilder operations, while services contain validation, authorization, and business rules.
 
-- **Common Module**: Centralized shared utilities, DTOs (`PageDto`, `PaginationDto`), response formats (`ResponseFormat`), and utility functions (e.g., `email-mask.util.ts`) to reduce duplication across modules.
+- **Common Module**: Centralized shared utilities, DTOs (`PageDto`, `PaginationDto`), and response formats (`ResponseFormat`) to reduce duplication across modules.
 
 - **Environment Configuration**: Implemented `ConfigModule` for strict environment variable validation and access throughout the app, ensuring type-safe configuration management.
 
@@ -28,7 +28,7 @@ This document outlines the key architectural changes and design decisions implem
 
 ## 3. Data Integrity & Database
 
-- **TypeORM & Migrations**: Configured TypeORM with proper migrations support and `SnakeNamingStrategy` for consistent database naming. Created a migration (`ChangeUserRoleToEnum1767140000000`) to convert `UserRole` to a strict database ENUM type, ensuring data integrity at the database level.
+- **TypeORM & Migrations**: Created a migration (`ChangeUserRoleToEnum1767140000000`) to convert `UserRole` from a VARCHAR column to a strict database ENUM type, ensuring data integrity at the database level.
 
 - **Seeding Strategy**: Developed an idempotent seeder (`npm run seed:prod`) that intelligently checks for existing data before running, ensuring a consistent initial state without overwriting existing records. Seeder uses `data.json` with 5 users (1 admin, 4 regular) and 10 products, all with `@eequ.org` email addresses and "password" as the password.
 
@@ -62,7 +62,7 @@ This document outlines the key architectural changes and design decisions implem
 
 - **Password Hashing**: All passwords are hashed using `bcrypt` with automatic salt generation before storage. Password comparison uses `bcrypt.compare()` during login.
 
-- **Email Masking**: Implemented `maskEmail()` utility function that masks email addresses in user responses (e.g., `j*****@e***.o*g`). Full email is only shown to admins or the user themselves, controlled by an authorization flag in `UserDto.fromEntity()`.
+- **Sensitive Data Protection**: Implemented conditional display of sensitive user data (email and role) in `UserDto.fromEntity()`. These fields are only included in responses when the requester is an admin or viewing their own profile, controlled by the `displaySensitiveData` boolean flag.
 
 - **Helmet Integration**: Added `helmet` middleware in `main.ts` for HTTP header security, protecting against common vulnerabilities like XSS, clickjacking, and MIME-type sniffing.
 
@@ -126,11 +126,12 @@ This document outlines the key architectural changes and design decisions implem
 
 ## 12. Code Organization & Best Practices
 
-- **Consistent File Structure**: Each module follows the same directory structure: `controllers/`, `services/`, `repositories/`, `dtos/request/`, `dtos/response/`, `entities/`, `enums/`, `tests/`, and `*.module.ts`.
-
 - **Import Organization**: Imports are organized by source (NestJS, third-party, local) with clear separation. Relative imports use consistent patterns based on file location.
 
+- **Naming Conventions**: Used clear, descriptive names for files, classes, and methods following NestJS conventions (e.g., `*.controller.ts`, `*.service.ts`, `*.dto.ts`).
 
-- **Documentation**: Added comprehensive JSDoc comments where needed and Swagger decorators for API documentation. Code is self-documenting through clear naming conventions.
+- **Type Safety**: Eliminated `any` types throughout the codebase, using proper TypeScript interfaces, types, and generics for all function parameters and return values.
+
+- **Documentation**: Added comprehensive Swagger decorators for API documentation. Code is self-documenting through clear naming conventions and proper type annotations.
 
 - **Separation of Concerns**: Controllers handle HTTP concerns (request/response), services handle business logic, repositories handle data access, and DTOs handle validation and transformation.
