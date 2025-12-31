@@ -14,7 +14,10 @@ import { AuthGuard } from './modules/auth/guards/auth.guard';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', 'env.sample'],
+    }),
     TypeOrmModule.forRootAsync(typeormModuleOptions),
     LoggerModule.forRoot(),
     CacheModule.register({

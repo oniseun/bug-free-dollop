@@ -14,7 +14,7 @@ export const typeormTestOptions: FactoryProvider = {
       port: config.get<number>('DB_PORT'),
       username: config.get<string>('DB_USERNAME'),
       password: config.get<string>('DB_PASSWORD'),
-      database: 'nestjs_test',
+      database: config.get<string>('DB_NAME'),
     } as DataSourceOptions;
     const dataSource = new DataSource(testOptions);
     return dataSource.initialize();

@@ -1,0 +1,47 @@
+version: '3.8'
+
+# Infra stack specifically for running tests (MySQL + Redis).
+services:
+  mysql:
+    image: mysql:8.0.34
+    container_name: eequ_mysql_test
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: eequ_recruit
+      MYSQL_USER: eequ_user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data_test:/var/lib/mysql
+    command: mysqld --sql_mode=""
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eequ_test_network
+
+  redis:
+    image: redis:7.4.0
+    container_name: eequ_redis_test
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eequ_test_network
+
+volumes:
+  mysql_data_test:
+
+networks:
+  eequ_test_network:
+    driver: bridge
+

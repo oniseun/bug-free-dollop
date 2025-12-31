@@ -13,6 +13,8 @@
     "start:prod": "node dist/main",
     "start:docker": "docker-compose up  --build",
     "stop:docker": "docker-compose down",
+    "infra:up": "docker compose -f docker-compose.infra.yml up -d",
+    "infra:down": "docker compose -f docker-compose.infra.yml down",
     "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate",
     "migration:run": "node ./node_modules/typeorm/cli.js migration:run -d dist/database/localDataSource.js",
     "migration:revert": "node ./node_modules/typeorm/cli.js migration:revert -d dist/database/localDataSource.js",
@@ -23,7 +25,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand --forceExit",
+    "test:infra:up": "docker compose -f docker-compose.test-infra.yml up -d",
+    "test:infra:down": "docker compose -f docker-compose.test-infra.yml down",
+    "test:e2e:raw": "jest --config ./test/jest-e2e.json --runInBand --forceExit",
+    "test:e2e": "bash -c \"npm run test:infra:up && (npm run test:e2e:raw; EXIT_CODE=$?; npm run test:infra:down; exit $EXIT_CODE)\"",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js"
   },
   "engines": {
