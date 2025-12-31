@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '../../../src/modules/users/entities/user.entity';
-import { TestDatabaseService } from '../test-database.service';
-import { UserRole } from '../../../src/modules/users/enums/user-role.enum';
+import { User } from '../entities/user.entity';
+import { TestDatabaseService } from '../../../test/test-database.service';
+import { UserRole } from '../enums/user-role.enum';
 
 @Injectable()
 export class UserTestService {
@@ -31,3 +31,4 @@ export class UserTestService {
     return user;
   }
 }
+

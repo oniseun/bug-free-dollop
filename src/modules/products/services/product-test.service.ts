@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { TestDatabaseService } from '../test-database.service';
-import { Product } from '../../../src/modules/products/entities/product.entity';
+import { TestDatabaseService } from '../../../test/test-database.service';
+import { Product } from '../entities/product.entity';
 
 @Injectable()
 export class ProductTestService {
@@ -28,3 +28,4 @@ export class ProductTestService {
     return product;
   }
 }
+

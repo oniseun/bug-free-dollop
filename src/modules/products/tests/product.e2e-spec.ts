@@ -2,9 +2,9 @@ import { INestApplication } from '@nestjs/common';
 import { TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import request from 'supertest';
-import { EntityTestService } from '../../../../test/services/entity/entity-test.service';
-import { TestDatabaseService } from '../../../../test/services/test-database.service';
-import { getMainModule } from '../../../../test/app';
+import { EntityTestService } from '../../../test/entity-test.service';
+import { TestDatabaseService } from '../../../test/test-database.service';
+import { createTestModule } from '../../../test/create-test-module';
 import { ProductDto } from '../dtos/response/product.dto';
 import { CreateProductDto } from '../dtos/request/create-product.dto';
 import { UpdateProductDto } from '../dtos/request/update-product.dto';
@@ -18,7 +18,7 @@ describe('/product', () => {
   let jwtService: JwtService;
 
   beforeAll(async () => {
-    module = await getMainModule();
+    module = await createTestModule();
     testDatabaseService = module.get<TestDatabaseService>(TestDatabaseService);
     testService = module.get<EntityTestService>(EntityTestService);
     jwtService = module.get<JwtService>(JwtService);
