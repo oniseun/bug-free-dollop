@@ -1,6 +1,6 @@
 # Refactor Notes: Eequ Recruit Backend
 
-This document outlines the key architectural changes and design decisions implemented to modernize the `eequ-recruit` codebase following industry best practices and NestJS conventions.
+This document outlines the key architectural changes and design decisions implemented to modernize this codebase following industry best practices and NestJS conventions.
 
 ## 1. Architecture & Modularization
 
@@ -90,7 +90,7 @@ This document outlines the key architectural changes and design decisions implem
 
 - **Removed userId from DTOs**: `CreateUserDto` and `CreateProductDto` no longer require `userId`; it's derived from `currentUser.userId` in the service layer, preventing users from creating resources for other users.
 
-- **Type Safety**: All DTOs use TypeScript interfaces and enums (`UserRole`) for type safety, with proper imports and exports.
+- **Type Safety**: All DTOs use TypeScript interfaces and enums (`UserRole`) for type safety.
 
 ## 9. Testing Strategy
 
