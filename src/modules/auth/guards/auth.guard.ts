@@ -1,5 +1,4 @@
 import {
-  CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
@@ -26,8 +25,7 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
     if (isPublic) {
       try {
         await super.canActivate(context);
-      } catch (error) {
-
+      } catch {
         return true;
       }
       return true;
@@ -39,13 +37,16 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
 
   handleRequest(err, user, info, context: ExecutionContext) {
     if (err || !user) {
-      throw err || new UnauthorizedException(new ResponseFormat(false, 'Unauthorized'));
+      throw (
+        err ||
+        new UnauthorizedException(new ResponseFormat(false, 'Unauthorized'))
+      );
     }
 
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredRoles) {
       return user;
@@ -53,10 +54,11 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
 
     const hasRole = requiredRoles.some((role) => user.role === role);
     if (!hasRole) {
-      throw new UnauthorizedException(new ResponseFormat(false, 'Forbidden resource'));
+      throw new UnauthorizedException(
+        new ResponseFormat(false, 'Forbidden resource'),
+      );
     }
 
     return user;
   }
 }
-

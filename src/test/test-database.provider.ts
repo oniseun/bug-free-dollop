@@ -23,4 +23,3 @@ export const typeormTestOptions: FactoryProvider = {
   },
   inject: [ConfigService],
 };
-

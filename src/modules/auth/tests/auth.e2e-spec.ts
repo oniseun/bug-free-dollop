@@ -2,7 +2,6 @@ import { INestApplication } from '@nestjs/common';
 import { TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { createTestModule } from '../../../test/create-test-module';
-import { EntityTestService } from '../../../test/entity-test.service';
 import { TestDatabaseService } from '../../../test/test-database.service';
 import { CreateUserDto } from '../../users/dtos/request/create-user.dto';
 import { UserDto } from '../../users/dtos/response/user.dto';
@@ -12,12 +11,10 @@ describe('/auth', () => {
   let app: INestApplication;
   let module: TestingModule;
   let testDatabaseService: TestDatabaseService;
-  let testService: EntityTestService;
 
   beforeAll(async () => {
     module = await createTestModule();
     testDatabaseService = module.get<TestDatabaseService>(TestDatabaseService);
-    testService = module.get<EntityTestService>(EntityTestService);
 
     app = module.createNestApplication();
     await app.init();
@@ -102,4 +99,3 @@ describe('/auth', () => {
     });
   });
 });
-

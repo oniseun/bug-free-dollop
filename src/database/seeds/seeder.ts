@@ -9,6 +9,7 @@ import { DB_ENTITIES } from '../database.entities';
 import { DB_MIGRATIONS } from '../database.migrations';
 
 // Load environment variables
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require('dotenv').config();
 
 const dataSource = new DataSource({
@@ -123,4 +124,3 @@ async function seed() {
 }
 
 seed();
-

@@ -21,4 +21,3 @@ export class ResponseFormat<T = void> {
     }
   }
 }
-

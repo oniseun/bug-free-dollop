@@ -20,4 +20,3 @@ export class PageDto<T = unknown> {
     this.offset = offset;
   }
 }
-

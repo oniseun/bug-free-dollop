@@ -46,7 +46,11 @@ describe('ProductController', () => {
 
     it('should return paginated products list', async () => {
       const mockPageDto = new PageDto([mockProductDto], 1, 10, 0);
-      const mockResponse = new ResponseFormat(true, 'Products retrieved successfully', mockPageDto);
+      const mockResponse = new ResponseFormat(
+        true,
+        'Products retrieved successfully',
+        mockPageDto,
+      );
       productService.findProducts.mockResolvedValue(mockResponse);
 
       const result = await productController.find(paginationDto);
@@ -60,7 +64,11 @@ describe('ProductController', () => {
 
   describe('getProduct', () => {
     it('should return a product by ID', async () => {
-      const mockResponse = new ResponseFormat(true, 'Product retrieved successfully', mockProductDto);
+      const mockResponse = new ResponseFormat(
+        true,
+        'Product retrieved successfully',
+        mockProductDto,
+      );
       productService.getProduct.mockResolvedValue(mockResponse);
 
       const result = await productController.getProduct(1);
@@ -73,7 +81,9 @@ describe('ProductController', () => {
     it('should propagate NotFoundException from service', async () => {
       productService.getProduct.mockRejectedValue(new NotFoundException());
 
-      await expect(productController.getProduct(999)).rejects.toThrow(NotFoundException);
+      await expect(productController.getProduct(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -86,12 +96,19 @@ describe('ProductController', () => {
 
     it('should create a product successfully', async () => {
       const newProductDto = { ...mockProductDto, ...createDto };
-      const mockResponse = new ResponseFormat(true, 'Product created successfully', newProductDto);
+      const mockResponse = new ResponseFormat(
+        true,
+        'Product created successfully',
+        newProductDto,
+      );
       productService.createProduct.mockResolvedValue(mockResponse);
 
       const result = await productController.createProduct(createDto, mockUser);
 
-      expect(productService.createProduct).toHaveBeenCalledWith(createDto, mockUser);
+      expect(productService.createProduct).toHaveBeenCalledWith(
+        createDto,
+        mockUser,
+      );
       expect(result.success).toBe(true);
       expect(result.data.title).toBe(createDto.title);
     });
@@ -104,12 +121,24 @@ describe('ProductController', () => {
 
     it('should update a product successfully', async () => {
       const updatedProductDto = { ...mockProductDto, ...updateDto };
-      const mockResponse = new ResponseFormat(true, 'Product updated successfully', updatedProductDto);
+      const mockResponse = new ResponseFormat(
+        true,
+        'Product updated successfully',
+        updatedProductDto,
+      );
       productService.updateProduct.mockResolvedValue(mockResponse);
 
-      const result = await productController.updateProduct(1, updateDto, mockUser);
+      const result = await productController.updateProduct(
+        1,
+        updateDto,
+        mockUser,
+      );
 
-      expect(productService.updateProduct).toHaveBeenCalledWith(1, updateDto, mockUser);
+      expect(productService.updateProduct).toHaveBeenCalledWith(
+        1,
+        updateDto,
+        mockUser,
+      );
       expect(result.success).toBe(true);
       expect(result.data.title).toBe(updateDto.title);
     });
@@ -117,13 +146,18 @@ describe('ProductController', () => {
     it('should propagate ForbiddenException from service', async () => {
       productService.updateProduct.mockRejectedValue(new ForbiddenException());
 
-      await expect(productController.updateProduct(1, updateDto, mockUser)).rejects.toThrow(ForbiddenException);
+      await expect(
+        productController.updateProduct(1, updateDto, mockUser),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('delete', () => {
     it('should delete a product successfully', async () => {
-      const mockResponse = new ResponseFormat(true, 'Product deleted successfully');
+      const mockResponse = new ResponseFormat(
+        true,
+        'Product deleted successfully',
+      );
       productService.deleteProduct.mockResolvedValue(mockResponse);
 
       const result = await productController.delete(1, mockUser);
@@ -135,8 +169,9 @@ describe('ProductController', () => {
     it('should propagate ForbiddenException from service', async () => {
       productService.deleteProduct.mockRejectedValue(new ForbiddenException());
 
-      await expect(productController.delete(1, mockUser)).rejects.toThrow(ForbiddenException);
+      await expect(productController.delete(1, mockUser)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 });
-

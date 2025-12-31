@@ -28,11 +28,11 @@ export class ProductDto {
     dto.number = entity.number;
     dto.title = entity.title;
     dto.description = entity.description;
-    
+
     if (entity.user) {
       dto.user = UserDto.fromEntity(entity.user);
     }
-    
+
     return dto;
   }
 }

@@ -9,7 +9,14 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBody,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
 import { UpdateUserDto } from '../dtos/request/update-user.dto';
@@ -31,11 +38,36 @@ export class UserController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'Find users', description: 'Retrieve a paginated list of users with optional search. Public endpoint - admins see full email, others see masked.' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for user first name' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page', example: 10 })
-  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Pagination offset', example: 0 })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: PageDto })
+  @ApiOperation({
+    summary: 'Find users',
+    description:
+      'Retrieve a paginated list of users with optional search. Public endpoint - admins see full email, others see masked.',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term for user first name',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Pagination offset',
+    example: 0,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Users retrieved successfully',
+    type: PageDto,
+  })
   async find(
     @Query() query: PaginationDto,
     @CurrentUser() currentUser?: CurrentUserType,
@@ -45,8 +77,16 @@ export class UserController {
 
   @Public()
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a single user by their unique identifier. Public endpoint - admins see full email, others see masked.' })
-  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserDto })
+  @ApiOperation({
+    summary: 'Get user by ID',
+    description:
+      'Retrieve a single user by their unique identifier. Public endpoint - admins see full email, others see masked.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User retrieved successfully',
+    type: UserDto,
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(
     @Param('id', ParseIntPipe) id: number,
@@ -59,7 +99,11 @@ export class UserController {
   @Post()
   @ApiOperation({ summary: 'Create user', description: 'Register a new user.' })
   @ApiBody({ type: CreateUserDto, description: 'User creation details' })
-  @ApiResponse({ status: 201, description: 'User created successfully', type: UserDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    type: UserDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   async createUser(
@@ -69,9 +113,17 @@ export class UserController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update user', description: 'Update an existing user profile. Admin can update any user, users can update themselves.' })
+  @ApiOperation({
+    summary: 'Update user',
+    description:
+      'Update an existing user profile. Admin can update any user, users can update themselves.',
+  })
   @ApiBody({ type: UpdateUserDto, description: 'User update details' })
-  @ApiResponse({ status: 200, description: 'User updated successfully', type: UserDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    type: UserDto,
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   @ApiResponse({ status: 403, description: 'Forbidden - not admin or self' })
@@ -85,7 +137,10 @@ export class UserController {
 
   @Roles(UserRole.admin)
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete user', description: 'Delete a user account. Admin only. Cannot delete yourself.' })
+  @ApiOperation({
+    summary: 'Delete user',
+    description: 'Delete a user account. Admin only. Cannot delete yourself.',
+  })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 400, description: 'Cannot delete yourself' })

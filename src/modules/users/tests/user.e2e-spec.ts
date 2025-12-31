@@ -89,7 +89,10 @@ describe('/user', () => {
 
     it('allows a registered user to log in', async () => {
       const payload = makeUserPayload({ password: 'loginPassword123' });
-      await request(app.getHttpServer()).post('/user').send(payload).expect(201);
+      await request(app.getHttpServer())
+        .post('/user')
+        .send(payload)
+        .expect(201);
       const token = await loginUser(payload.email, payload.password);
 
       expect(token).toBeDefined();
@@ -116,10 +119,7 @@ describe('/user', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      const {
-        items: results,
-        total,
-      } = response.body.data as PageDto<UserDto>;
+      const { items: results, total } = response.body.data as PageDto<UserDto>;
       expect(total).toBe(1);
       expect(results).toHaveLength(1);
 
@@ -174,10 +174,7 @@ describe('/user', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      const {
-        items: results,
-        total,
-      } = response.body.data as PageDto<UserDto>;
+      const { items: results, total } = response.body.data as PageDto<UserDto>;
       expect(total).toBe(1);
       expect(results).toHaveLength(1);
 
@@ -295,7 +292,10 @@ describe('/user', () => {
   });
 
   it('DELETE /', async () => {
-    const adminUser = await testService.user.create({ role: UserRole.admin, email: 'admin@test.com' });
+    const adminUser = await testService.user.create({
+      role: UserRole.admin,
+      email: 'admin@test.com',
+    });
     const user2 = await testService.user.create({
       firstName: 'Donny',
       lastName: 'Don',

@@ -45,10 +45,12 @@ describe('/product', () => {
   const uniqueEmail = (prefix: string) =>
     `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@eequ.org`;
 
-  const createUserEntity = (overrides: {
-    role?: UserRole;
-    email?: string;
-  } = {}) => {
+  const createUserEntity = (
+    overrides: {
+      role?: UserRole;
+      email?: string;
+    } = {},
+  ) => {
     return testService.user.create({
       role: overrides.role ?? UserRole.user,
       email: overrides.email ?? uniqueEmail('user'),
@@ -59,15 +61,13 @@ describe('/product', () => {
     it('should retrieve products without authentication', async () => {
       const user = await testService.user.create();
       const product = await testService.product.createItem({ userId: user.id });
-      
+
       const response = await request(app.getHttpServer())
         .get('/product')
         .expect(200);
 
-      const {
-        items: results,
-        total,
-      } = response.body.data as PageDto<ProductDto>;
+      const { items: results, total } = response.body
+        .data as PageDto<ProductDto>;
       expect(total).toBe(1);
       expect(results).toHaveLength(1);
 
@@ -80,7 +80,7 @@ describe('/product', () => {
 
     it('should paginate products', async () => {
       const user = await testService.user.create();
-      const product = await testService.product.createItem({ userId: user.id });
+      await testService.product.createItem({ userId: user.id });
       const product2 = await testService.product.createItem({
         title: 'The Very Hungry Caterpillar',
         userId: user.id,
@@ -121,10 +121,8 @@ describe('/product', () => {
         .get('/product?search=Moby')
         .expect(200);
 
-      const {
-        items: results,
-        total,
-      } = response.body.data as PageDto<ProductDto>;
+      const { items: results, total } = response.body
+        .data as PageDto<ProductDto>;
       expect(total).toBe(1);
       expect(results).toHaveLength(1);
 
@@ -155,7 +153,7 @@ describe('/product', () => {
   describe('Authenticated Operations', () => {
     it('GET / should work with authentication token too', async () => {
       const user = await testService.user.create();
-      const product = await testService.product.createItem({ userId: user.id });
+      await testService.product.createItem({ userId: user.id });
       const token = getAccessToken(user);
 
       const response = await request(app.getHttpServer())
@@ -238,7 +236,9 @@ describe('/product', () => {
 
     it('requires authentication to update a product', async () => {
       const owner = await createUserEntity();
-      const product = await testService.product.createItem({ userId: owner.id });
+      const product = await testService.product.createItem({
+        userId: owner.id,
+      });
 
       await request(app.getHttpServer())
         .put(`/product/${product.id}`)
@@ -248,7 +248,9 @@ describe('/product', () => {
 
     it('requires authentication to delete a product', async () => {
       const owner = await createUserEntity();
-      const product = await testService.product.createItem({ userId: owner.id });
+      const product = await testService.product.createItem({
+        userId: owner.id,
+      });
 
       await request(app.getHttpServer())
         .delete(`/product/${product.id}`)
@@ -258,7 +260,9 @@ describe('/product', () => {
     it('prevents non-owners from updating a product', async () => {
       const owner = await createUserEntity();
       const otherUser = await createUserEntity();
-      const product = await testService.product.createItem({ userId: owner.id });
+      const product = await testService.product.createItem({
+        userId: owner.id,
+      });
       const token = getAccessToken(otherUser);
 
       const response = await request(app.getHttpServer())
@@ -275,7 +279,9 @@ describe('/product', () => {
     it('prevents non-owners from deleting a product', async () => {
       const owner = await createUserEntity();
       const otherUser = await createUserEntity();
-      const product = await testService.product.createItem({ userId: owner.id });
+      const product = await testService.product.createItem({
+        userId: owner.id,
+      });
       const token = getAccessToken(otherUser);
 
       const response = await request(app.getHttpServer())
@@ -291,7 +297,9 @@ describe('/product', () => {
     it('allows admins to update products they do not own', async () => {
       const owner = await createUserEntity({ role: UserRole.user });
       const admin = await createUserEntity({ role: UserRole.admin });
-      const product = await testService.product.createItem({ userId: owner.id });
+      const product = await testService.product.createItem({
+        userId: owner.id,
+      });
       const token = getAccessToken(admin);
 
       const response = await request(app.getHttpServer())
@@ -307,7 +315,9 @@ describe('/product', () => {
     it('allows admins to delete products they do not own', async () => {
       const owner = await createUserEntity({ role: UserRole.user });
       const admin = await createUserEntity({ role: UserRole.admin });
-      const product = await testService.product.createItem({ userId: owner.id });
+      const product = await testService.product.createItem({
+        userId: owner.id,
+      });
       const token = getAccessToken(admin);
 
       await request(app.getHttpServer())

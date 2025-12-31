@@ -1,6 +1,5 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../users/services/user.service';
 import { LoginDto } from './dtos/request/login.dto';
 import { ResponseFormat } from '../common/response-format';
 import * as bcrypt from 'bcrypt';
@@ -17,24 +16,28 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto): Promise<ResponseFormat<LoginResponseDto>> {
-    const user = await this.userRepository.createQueryBuilder('user')
-        .where('user.email = :email', { email: loginDto.email })
-        .addSelect('user.password') // Password is usually hidden
-        .getOne();
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email = :email', { email: loginDto.email })
+      .addSelect('user.password') // Password is usually hidden
+      .getOne();
 
     if (!user) {
       this.logger.warn(`Failed login attempt for email: ${loginDto.email}`);
       throw new UnauthorizedException(
-        new ResponseFormat(false, 'Invalid credentials')
+        new ResponseFormat(false, 'Invalid credentials'),
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
     if (!isPasswordValid) {
       this.logger.warn(`Invalid password for user: ${loginDto.email}`);
       throw new UnauthorizedException(
-        new ResponseFormat(false, 'Invalid credentials')
+        new ResponseFormat(false, 'Invalid credentials'),
       );
     }
 
@@ -47,4 +50,3 @@ export class AuthService {
     });
   }
 }
-

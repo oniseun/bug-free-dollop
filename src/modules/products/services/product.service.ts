@@ -29,10 +29,12 @@ export class ProductService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async findProducts(query: PaginationDto): Promise<ResponseFormat<PageDto<ProductDto>>> {
+  async findProducts(
+    query: PaginationDto,
+  ): Promise<ResponseFormat<PageDto<ProductDto>>> {
     const { limit, offset, search } = query;
     const queryBuilder = this.productRepository.createQueryBuilder('product');
-    
+
     queryBuilder.leftJoinAndSelect('product.user', 'user');
 
     if (search) {
@@ -56,7 +58,10 @@ export class ProductService {
         new PageDto(dtos, count, limit, offset),
       );
     } catch (error) {
-      this.logger.error(`Error finding products: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error finding products: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -79,7 +84,7 @@ export class ProductService {
       if (!product) {
         this.logger.warn(`Product with ID ${id} not found`);
         throw new NotFoundException(
-          new ResponseFormat(false, 'Product not found')
+          new ResponseFormat(false, 'Product not found'),
         );
       }
 
@@ -93,7 +98,10 @@ export class ProductService {
       );
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Error getting product ${id}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting product ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -107,9 +115,11 @@ export class ProductService {
 
       const user = await this.userRepository.findOneById(userId);
       if (!user) {
-        this.logger.warn(`User with ID ${userId} not found during product creation`);
+        this.logger.warn(
+          `User with ID ${userId} not found during product creation`,
+        );
         throw new NotFoundException(
-          new ResponseFormat(false, 'User not found')
+          new ResponseFormat(false, 'User not found'),
         );
       }
 
@@ -120,8 +130,10 @@ export class ProductService {
       product.number = dto.number;
 
       const createdProduct = await this.productRepository.save(product);
-      
-      this.logger.log(`Product created with ID ${createdProduct.id} by user ${currentUser.userId}`);
+
+      this.logger.log(
+        `Product created with ID ${createdProduct.id} by user ${currentUser.userId}`,
+      );
       return new ResponseFormat(
         true,
         'Product created successfully',
@@ -129,7 +141,10 @@ export class ProductService {
       );
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Error creating product: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error creating product: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -145,7 +160,7 @@ export class ProductService {
       if (!product) {
         this.logger.warn(`Product with ID ${id} not found for update`);
         throw new NotFoundException(
-          new ResponseFormat(false, 'Product not found')
+          new ResponseFormat(false, 'Product not found'),
         );
       }
 
@@ -154,9 +169,14 @@ export class ProductService {
       const isOwner = product.userId === currentUser.userId;
 
       if (!isAdmin && !isOwner) {
-        this.logger.warn(`Forbidden access attempt to update product ${id} by user ${currentUser.userId}`);
+        this.logger.warn(
+          `Forbidden access attempt to update product ${id} by user ${currentUser.userId}`,
+        );
         throw new ForbiddenException(
-          new ResponseFormat(false, 'You do not have access to update this product')
+          new ResponseFormat(
+            false,
+            'You do not have access to update this product',
+          ),
         );
       }
 
@@ -165,18 +185,27 @@ export class ProductService {
       if (dto.number !== undefined) product.number = dto.number;
 
       const updatedProduct = await this.productRepository.save(product);
-      
+
       await this.cacheManager.del(`product_${id}`);
 
-      this.logger.log(`Product updated with ID ${updatedProduct.id} by user ${currentUser.userId}`);
+      this.logger.log(
+        `Product updated with ID ${updatedProduct.id} by user ${currentUser.userId}`,
+      );
       return new ResponseFormat(
         true,
         'Product updated successfully',
         ProductDto.fromEntity(updatedProduct),
       );
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException) throw error;
-      this.logger.error(`Error updating product ${id}: ${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      )
+        throw error;
+      this.logger.error(
+        `Error updating product ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -190,7 +219,7 @@ export class ProductService {
       if (!product) {
         this.logger.warn(`Product with ID ${id} not found for deletion`);
         throw new NotFoundException(
-          new ResponseFormat(false, 'Product not found')
+          new ResponseFormat(false, 'Product not found'),
         );
       }
 
@@ -199,20 +228,34 @@ export class ProductService {
       const isOwner = product.userId === currentUser.userId;
 
       if (!isAdmin && !isOwner) {
-        this.logger.warn(`Forbidden access attempt to delete product ${id} by user ${currentUser.userId}`);
+        this.logger.warn(
+          `Forbidden access attempt to delete product ${id} by user ${currentUser.userId}`,
+        );
         throw new ForbiddenException(
-          new ResponseFormat(false, 'You do not have permission to delete this product')
+          new ResponseFormat(
+            false,
+            'You do not have permission to delete this product',
+          ),
         );
       }
 
       await this.productRepository.delete(id);
       await this.cacheManager.del(`product_${id}`);
 
-      this.logger.log(`Product deleted with ID ${id} by user ${currentUser.userId}`);
+      this.logger.log(
+        `Product deleted with ID ${id} by user ${currentUser.userId}`,
+      );
       return new ResponseFormat(true, 'Product deleted successfully');
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException) throw error;
-      this.logger.error(`Error deleting product ${id}: ${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      )
+        throw error;
+      this.logger.error(
+        `Error deleting product ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }

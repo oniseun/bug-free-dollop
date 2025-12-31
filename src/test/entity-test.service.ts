@@ -17,4 +17,3 @@ export class EntityTestService {
     return this.productTestService;
   }
 }
-

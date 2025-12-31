@@ -92,8 +92,13 @@ describe('ProductService', () => {
 
       const result = await productService.findProducts(paginationDto);
 
-      expect(productRepository.createQueryBuilder).toHaveBeenCalledWith('product');
-      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('product.user', 'user');
+      expect(productRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'product',
+      );
+      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'product.user',
+        'user',
+      );
       expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
       expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0);
       expect(result.success).toBe(true);
@@ -136,7 +141,10 @@ describe('ProductService', () => {
       const result = await productService.getProduct(1);
 
       expect(productRepository.findOneById).toHaveBeenCalledWith(1);
-      expect(cacheManager.set).toHaveBeenCalledWith('product_1', expect.anything());
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'product_1',
+        expect.anything(),
+      );
       expect(result.success).toBe(true);
       expect(result.data.id).toBe(mockProduct.id);
     });
@@ -145,7 +153,9 @@ describe('ProductService', () => {
       cacheManager.get.mockResolvedValue(null);
       productRepository.findOneById.mockResolvedValue(null);
 
-      await expect(productService.getProduct(999)).rejects.toThrow(NotFoundException);
+      await expect(productService.getProduct(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -161,13 +171,20 @@ describe('ProductService', () => {
       const savedProduct = { ...mockProduct, ...createDto };
       productRepository.save.mockResolvedValue(savedProduct);
 
-      const result = await productService.createProduct(createDto, mockCurrentUser);
+      const result = await productService.createProduct(
+        createDto,
+        mockCurrentUser,
+      );
 
-      expect(userRepository.findOneById).toHaveBeenCalledWith(mockCurrentUser.userId);
-      expect(productRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-        userId: mockCurrentUser.userId,
-        title: createDto.title,
-      }));
+      expect(userRepository.findOneById).toHaveBeenCalledWith(
+        mockCurrentUser.userId,
+      );
+      expect(productRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: mockCurrentUser.userId,
+          title: createDto.title,
+        }),
+      );
       expect(result.success).toBe(true);
       expect(result.data.title).toBe(createDto.title);
     });
@@ -175,7 +192,9 @@ describe('ProductService', () => {
     it('should throw NotFoundException if user does not exist', async () => {
       userRepository.findOneById.mockResolvedValue(null);
 
-      await expect(productService.createProduct(createDto, mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        productService.createProduct(createDto, mockCurrentUser),
+      ).rejects.toThrow(NotFoundException);
       expect(productRepository.save).not.toHaveBeenCalled();
     });
   });
@@ -190,7 +209,11 @@ describe('ProductService', () => {
       const updatedProduct = { ...mockProduct, ...updateDto };
       productRepository.save.mockResolvedValue(updatedProduct);
 
-      const result = await productService.updateProduct(1, updateDto, mockCurrentUser);
+      const result = await productService.updateProduct(
+        1,
+        updateDto,
+        mockCurrentUser,
+      );
 
       expect(productRepository.save).toHaveBeenCalled();
       expect(cacheManager.del).toHaveBeenCalledWith('product_1');
@@ -203,7 +226,11 @@ describe('ProductService', () => {
       const updatedProduct = { ...mockProduct, ...updateDto };
       productRepository.save.mockResolvedValue(updatedProduct);
 
-      const result = await productService.updateProduct(1, updateDto, mockAdminUser);
+      const result = await productService.updateProduct(
+        1,
+        updateDto,
+        mockAdminUser,
+      );
 
       expect(result.success).toBe(true);
     });
@@ -212,20 +239,24 @@ describe('ProductService', () => {
       const otherUser: CurrentUser = { userId: 999, role: UserRole.user };
       productRepository.findOneById.mockResolvedValue(mockProduct);
 
-      await expect(productService.updateProduct(1, updateDto, otherUser)).rejects.toThrow(ForbiddenException);
+      await expect(
+        productService.updateProduct(1, updateDto, otherUser),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException if product not found', async () => {
       productRepository.findOneById.mockResolvedValue(null);
 
-      await expect(productService.updateProduct(999, updateDto, mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        productService.updateProduct(999, updateDto, mockCurrentUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('deleteProduct', () => {
     it('should allow owner to delete product', async () => {
       productRepository.findOneById.mockResolvedValue(mockProduct);
-      
+
       const result = await productService.deleteProduct(1, mockCurrentUser);
 
       expect(productRepository.delete).toHaveBeenCalledWith(1);
@@ -246,14 +277,17 @@ describe('ProductService', () => {
       const otherUser: CurrentUser = { userId: 999, role: UserRole.user };
       productRepository.findOneById.mockResolvedValue(mockProduct);
 
-      await expect(productService.deleteProduct(1, otherUser)).rejects.toThrow(ForbiddenException);
+      await expect(productService.deleteProduct(1, otherUser)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw NotFoundException if product not found', async () => {
       productRepository.findOneById.mockResolvedValue(null);
 
-      await expect(productService.deleteProduct(999, mockAdminUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        productService.deleteProduct(999, mockAdminUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
-

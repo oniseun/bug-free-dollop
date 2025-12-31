@@ -24,4 +24,3 @@ export const createTestModule = async (): Promise<TestingModule> => {
     })
     .compile();
 };
-

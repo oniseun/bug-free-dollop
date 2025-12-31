@@ -7,4 +7,3 @@ export class LoginResponseDto {
   @ApiProperty({ description: 'Token expiration in seconds' })
   expiresIn: number;
 }
-

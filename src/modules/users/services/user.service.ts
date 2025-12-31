@@ -53,7 +53,9 @@ export class UserService {
       const dtos = users.map((user) =>
         UserDto.fromEntity(
           user,
-          !!currentUser && (currentUser.role === UserRole.admin || currentUser.userId === user.id),
+          !!currentUser &&
+            (currentUser.role === UserRole.admin ||
+              currentUser.userId === user.id),
         ),
       );
 
@@ -88,8 +90,7 @@ export class UserService {
       }
       const userDto = UserDto.fromEntity(
         user,
-        currentUser?.role === UserRole.admin ||
-          currentUser?.userId === user.id,
+        currentUser?.role === UserRole.admin || currentUser?.userId === user.id,
       );
 
       return new ResponseFormat(true, 'User retrieved successfully', userDto);

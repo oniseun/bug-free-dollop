@@ -18,13 +18,20 @@ export class AuthService {
     const user = await this.userRepository.findOneByEmail(loginDto.email);
 
     if (!user) {
-      throw new UnauthorizedException(new ResponseFormat(false, 'Invalid credentials'));
+      throw new UnauthorizedException(
+        new ResponseFormat(false, 'Invalid credentials'),
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException(new ResponseFormat(false, 'Invalid credentials'));
+      throw new UnauthorizedException(
+        new ResponseFormat(false, 'Invalid credentials'),
+      );
     }
 
     const payload: JwtPayload = { sub: user.id, role: user.role };
@@ -36,4 +43,3 @@ export class AuthService {
     });
   }
 }
-

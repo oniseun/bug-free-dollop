@@ -18,7 +18,10 @@ export class UserDto {
   @ApiProperty({ enum: UserRole, required: false })
   role?: UserRole;
 
-  static fromEntity(entity: User, displaySensitiveData: boolean = false): UserDto {
+  static fromEntity(
+    entity: User,
+    displaySensitiveData: boolean = false,
+  ): UserDto {
     const dto = new UserDto();
     dto.id = entity.id;
     dto.firstName = entity.firstName;
@@ -26,7 +29,7 @@ export class UserDto {
     if (displaySensitiveData) {
       dto.email = entity.email;
       dto.role = entity.role;
-    } 
+    }
     return dto;
   }
 }

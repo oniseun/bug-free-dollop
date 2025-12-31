@@ -3,10 +3,10 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { DB_ENTITIES } from './database.entities';
 import { DB_MIGRATIONS } from './database.migrations';
 
-
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('dotenv').config();
-} catch (e) {
+} catch {
   // dotenv not available or no .env file, use process.env directly
 }
 
@@ -26,4 +26,3 @@ const LocalDataSource = new DataSource({
 });
 
 export default LocalDataSource;
-

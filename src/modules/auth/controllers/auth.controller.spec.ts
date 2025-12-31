@@ -47,7 +47,9 @@ describe('AuthController', () => {
       );
       authService.login.mockRejectedValue(error);
 
-      await expect(authController.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(authController.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(authService.login).toHaveBeenCalledWith(loginDto);
       expect(authService.login).toHaveBeenCalledTimes(1);
     });
@@ -56,7 +58,9 @@ describe('AuthController', () => {
       const error = new Error('Service unavailable');
       authService.login.mockRejectedValue(error);
 
-      await expect(authController.login(loginDto)).rejects.toThrow('Service unavailable');
+      await expect(authController.login(loginDto)).rejects.toThrow(
+        'Service unavailable',
+      );
       expect(authService.login).toHaveBeenCalledWith(loginDto);
     });
 
@@ -74,4 +78,3 @@ describe('AuthController', () => {
     });
   });
 });
-
