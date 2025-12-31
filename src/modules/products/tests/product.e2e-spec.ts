@@ -9,6 +9,7 @@ import { ProductDto } from '../dtos/response/product.dto';
 import { CreateProductDto } from '../dtos/request/create-product.dto';
 import { UpdateProductDto } from '../dtos/request/update-product.dto';
 import { PageDto } from '../../common/dtos/page.dto';
+import { User } from '../../users/entities/user.entity';
 import { UserRole } from '../../users/enums/user-role.enum';
 
 describe('/product', () => {
@@ -37,7 +38,7 @@ describe('/product', () => {
     await app.close();
   });
 
-  const getAccessToken = (user: any) => {
+  const getAccessToken = (user: User) => {
     return jwtService.sign({ sub: user.id, role: user.role });
   };
 

@@ -9,6 +9,7 @@ import { UserDto } from '../dtos/response/user.dto';
 import { CreateUserDto } from '../dtos/request/create-user.dto';
 import { UpdateUserDto } from '../dtos/request/update-user.dto';
 import { PageDto } from '../../common/dtos/page.dto';
+import { User } from '../entities/user.entity';
 import { UserRole } from '../enums/user-role.enum';
 
 describe('/user', () => {
@@ -37,7 +38,7 @@ describe('/user', () => {
     await app.close();
   });
 
-  const getAccessToken = (user: any) => {
+  const getAccessToken = (user: User) => {
     return jwtService.sign({ sub: user.id, role: user.role });
   };
 
