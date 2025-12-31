@@ -27,7 +27,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
     "test:infra:up": "docker compose -f docker-compose.test-infra.yml up -d",
     "test:infra:down": "docker compose -f docker-compose.test-infra.yml down",
-    "test:e2e:raw": "jest --config ./test/jest-e2e.json --runInBand --forceExit",
+    "test:e2e:raw": "jest --config jest-e2e.json --runInBand --forceExit",
     "test:e2e": "bash -c \"npm run test:infra:up && (npm run test:e2e:raw; EXIT_CODE=$?; npm run test:infra:down; exit $EXIT_CODE)\"",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js"
   },
