@@ -1,5 +1,6 @@
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Cache } from 'cache-manager';
+import { SelectQueryBuilder } from 'typeorm';
 import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { ProductService } from './product.service';
 import { ProductRepository } from '../repositories/product.repository';
@@ -75,7 +76,7 @@ describe('ProductService', () => {
     };
 
     const createMockQueryBuilder = () => {
-      const mockQueryBuilder = createMock<any>();
+      const mockQueryBuilder = createMock<SelectQueryBuilder<Product>>();
       mockQueryBuilder.leftJoinAndSelect.mockReturnValue(mockQueryBuilder);
       mockQueryBuilder.where.mockReturnValue(mockQueryBuilder);
       mockQueryBuilder.take.mockReturnValue(mockQueryBuilder);

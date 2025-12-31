@@ -61,7 +61,7 @@ Ensure your Docker software is running.
 
 4.  Set up environment variables:
 
-        cp env.example .env
+        cp .env.example .env
     
 5.  Start the database services (MySQL & Redis) using Docker:
     

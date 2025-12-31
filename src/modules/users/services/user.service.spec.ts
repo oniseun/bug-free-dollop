@@ -1,5 +1,6 @@
 import { ConflictException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Cache } from 'cache-manager';
+import { SelectQueryBuilder } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { UserService } from './user.service';
@@ -41,7 +42,7 @@ describe('UserService', () => {
   };
 
   beforeEach(() => {
-    const mockQueryBuilder = createMock<any>();
+    const mockQueryBuilder = createMock<SelectQueryBuilder<User>>();
     mockQueryBuilder.where.mockReturnValue(mockQueryBuilder);
     mockQueryBuilder.andWhere.mockReturnValue(mockQueryBuilder);
     mockQueryBuilder.take.mockReturnValue(mockQueryBuilder);
@@ -353,7 +354,7 @@ describe('UserService', () => {
       // User 1 is trying to delete User 2
       const targetUser = { ...mockUser, id: 2 }; 
       userRepository.findOneById.mockResolvedValue(targetUser);
-      userRepository.delete.mockResolvedValue({ affected: 1 } as any);
+      userRepository.delete.mockResolvedValue(undefined);
 
       const result = await userService.deleteUser(2, mockAdmin);
 
@@ -382,7 +383,7 @@ describe('UserService', () => {
     it('should invalidate cache after deletion', async () => {
       const targetUser = { ...mockUser, id: 2 };
       userRepository.findOneById.mockResolvedValue(targetUser);
-      userRepository.delete.mockResolvedValue({ affected: 1 } as any);
+      userRepository.delete.mockResolvedValue(undefined);
 
       await userService.deleteUser(2, mockAdmin);
 
