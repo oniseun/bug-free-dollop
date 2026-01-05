@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Unit Tests
 
 on:
   pull_request:
@@ -11,35 +11,9 @@ on:
       - development
 
 jobs:
-  build-and-test:
+  build-and-unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    services:
-      mysql:
-        image: mysql:8.0.34
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: eequ_recruit
-          MYSQL_USER: eequ_user
-          MYSQL_PASSWORD: password
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -ppassword"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-      redis:
-        image: redis:7.4.0
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       # Step 1: Checkout the code
@@ -77,20 +51,7 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      # Step 8: Run E2E tests
-      - name: Run E2E tests
-        run: npm run test:e2e:raw
-        env:
-          DB_HOST: localhost
-          DB_PORT: 3306
-          DB_USERNAME: root
-          DB_PASSWORD: password
-          DB_NAME: eequ_recruit
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          JWT_SECRET: test-jwt-secret-for-ci
-
-      # Step 9: Save npm cache
+      # Step 8: Save npm cache
       - name: Save npm cache
         if: success()
         uses: actions/cache@v4

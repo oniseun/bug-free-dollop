@@ -1,0 +1,88 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+  push:
+    branches:
+      - main
+      - development
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      mysql:
+        image: mysql:8.0.34
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: eequ_recruit
+          MYSQL_USER: eequ_user
+          MYSQL_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -ppassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7.4.0
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      # Step 3: Cache Node modules
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-dependencies-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-dependencies-${{ runner.os }}-
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 5: Run E2E tests
+      - name: Run E2E tests
+        run: npm run test:e2e:raw
+        env:
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_USERNAME: root
+          DB_PASSWORD: password
+          DB_NAME: eequ_recruit
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-jwt-secret-for-ci
+
+      # Step 6: Save npm cache
+      - name: Save npm cache
+        if: success()
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-dependencies-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
