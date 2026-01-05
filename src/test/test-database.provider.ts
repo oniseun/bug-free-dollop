@@ -17,6 +17,11 @@ export const typeormTestOptions: FactoryProvider = {
       database: config.get<string>('DB_NAME'),
       synchronize: true,
       dropSchema: true,
+      extra: {
+        connectionLimit: 5,
+        waitForConnections: true,
+        queueLimit: 0,
+      },
     } as DataSourceOptions;
     const dataSource = new DataSource(testOptions);
     return dataSource.initialize();

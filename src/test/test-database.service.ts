@@ -24,25 +24,30 @@ export class TestDatabaseService {
   }
 
   async cleanDatabase() {
-    const entities = await this.getEntities();
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
 
-    await this.cleanAllEntities(entities);
+    try {
+      const entities = await this.getEntities();
+      await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+      for (const entity of entities) {
+        try {
+          await queryRunner.query(`DELETE FROM ${entity.tableName}`);
+        } catch (err) {
+            console.error(`Failed to clean table ${entity.tableName}:`, err);
+            throw err;
+        }
+      }
+      await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
+    } catch (error) {
+        console.error('Error cleaning database:', error);
+        throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   private async getEntities() {
     return this.dataSource.entityMetadatas;
-  }
-
-  private async cleanAllEntities(entities: EntityMetadata[]) {
-    const query = [
-      'SET FOREIGN_KEY_CHECKS = 0;',
-      ...entities.map(
-        (entity) => `DELETE
-                             FROM ${entity.tableName};`,
-      ),
-      'SET FOREIGN_KEY_CHECKS = 1;',
-    ].join('');
-
-    await this.dataSource.query(query);
   }
 }

@@ -20,22 +20,33 @@ describe('/product', () => {
   let jwtService: JwtService;
 
   beforeAll(async () => {
-    module = await createTestModule();
-    testDatabaseService = module.get<TestDatabaseService>(TestDatabaseService);
-    testService = module.get<EntityTestService>(EntityTestService);
-    jwtService = module.get<JwtService>(JwtService);
+    try {
+      module = await createTestModule();
+      testDatabaseService = module.get<TestDatabaseService>(TestDatabaseService);
+      testService = module.get<EntityTestService>(EntityTestService);
+      jwtService = module.get<JwtService>(JwtService);
 
-    app = module.createNestApplication();
-    await app.init();
+      app = module.createNestApplication();
+      await app.init();
+    } catch (e) {
+      console.error('Test setup failed in beforeAll:', e);
+      throw e;
+    }
   });
 
   beforeEach(async () => {
-    await testDatabaseService.cleanDatabase();
+    if (testDatabaseService) {
+        await testDatabaseService.cleanDatabase();
+    }
   });
 
   afterAll(async () => {
-    await testDatabaseService.closeDatabaseConnection();
-    await app.close();
+    if (testDatabaseService) {
+        await testDatabaseService.closeDatabaseConnection();
+    }
+    if (app) {
+        await app.close();
+    }
   });
 
   const getAccessToken = (user: User) => {

@@ -13,20 +13,31 @@ describe('/auth', () => {
   let testDatabaseService: TestDatabaseService;
 
   beforeAll(async () => {
-    module = await createTestModule();
-    testDatabaseService = module.get<TestDatabaseService>(TestDatabaseService);
+    try {
+      module = await createTestModule();
+      testDatabaseService = module.get<TestDatabaseService>(TestDatabaseService);
 
-    app = module.createNestApplication();
-    await app.init();
+      app = module.createNestApplication();
+      await app.init();
+    } catch (e) {
+      console.error('Test setup failed in beforeAll (auth.e2e-spec):', e);
+      throw e;
+    }
   });
 
   beforeEach(async () => {
-    await testDatabaseService.cleanDatabase();
+    if (testDatabaseService) {
+      await testDatabaseService.cleanDatabase();
+    }
   });
 
   afterAll(async () => {
-    await testDatabaseService.closeDatabaseConnection();
-    await app.close();
+    if (testDatabaseService) {
+      await testDatabaseService.closeDatabaseConnection();
+    }
+    if (app) {
+      await app.close();
+    }
   });
 
   const uniqueEmail = (prefix: string) =>
